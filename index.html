@@ -581,10 +581,11 @@
         ];
 
         let images = [...fallbackImages];
+        let imageFolderPath = "Edibujar/";
 
         async function loadDynamicImages() {
             let owner = "u3823433669-ui";
-            let repo = "es2000.github.io";
+            let repo = "palabarjuego"; // 优先匹配当前新建立的仓库
 
             const hostname = window.location.hostname;
             const pathname = window.location.pathname;
@@ -598,28 +599,33 @@
                 }
             }
 
-            const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/Edibujar`;
-            console.log("正在尝试从 GitHub API 动态加载图片列表:", apiUrl);
+            // 尝试读取 Edibujar（大写首字母）或 edibujar（全小写）
+            const folderCandidates = ["Edibujar", "edibujar"];
+            for (const folder of folderCandidates) {
+                const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${folder}`;
+                console.log(`正在尝试从 GitHub API 加载 [${folder}] 文件夹:`, apiUrl);
 
-            try {
-                const response = await fetch(apiUrl);
-                if (!response.ok) {
-                    throw new Error(`GitHub API HTTP 状态码: ${response.status}`);
-                }
-                const data = await response.json();
-                if (Array.isArray(data)) {
-                    const validExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
-                    const fetchedImages = data
-                        .filter(file => file.type === 'file' && validExtensions.some(ext => file.name.toLowerCase().endsWith(ext)))
-                        .map(file => file.name);
-                    
-                    if (fetchedImages.length > 0) {
-                        images = fetchedImages;
-                        console.log("🎉 成功从 GitHub 动态加载到 " + images.length + " 个图片:", images);
+                try {
+                    const response = await fetch(apiUrl);
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (Array.isArray(data)) {
+                            const validExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
+                            const fetchedImages = data
+                                .filter(file => file.type === 'file' && validExtensions.some(ext => file.name.toLowerCase().endsWith(ext)))
+                                .map(file => file.name);
+                            
+                            if (fetchedImages.length > 0) {
+                                images = fetchedImages;
+                                imageFolderPath = folder + "/";
+                                console.log(`🎉 成功从 GitHub [${folder}] 动态加载到 ${images.length} 个图片:`, images);
+                                break;
+                            }
+                        }
                     }
+                } catch (error) {
+                    console.warn(`从 ${folder} 加载失败:`, error);
                 }
-            } catch (error) {
-                console.warn("无法从 GitHub API 动态读取文件（将自动使用默认写死的文件名列表）:", error);
             }
         }
 
@@ -634,7 +640,7 @@
         let touchEndY = 0;
         let isSwiped = false;
 
-        // 核心优化：统一调配舒适基准字号，避免单词字号忽大忽小
+        // 核心优化：超大显眼字号与智能防超框微调
         function fitText(el) {
             if (!el || !el.parentElement) return;
             const container = el.parentElement;
@@ -643,12 +649,12 @@
             const paddingRight = parseFloat(style.paddingRight) || 15;
             const maxWidth = Math.max(100, container.clientWidth - paddingLeft - paddingRight);
             
-            // 统一规范舒适的大字号（桌面端 84px / 移动端 48px）
-            let fontSize = window.innerWidth <= 600 ? 48 : 84; 
+            // 显著增大字号（桌面端 120px / 移动端 64px）
+            let fontSize = window.innerWidth <= 600 ? 64 : 120; 
             el.style.fontSize = fontSize + 'px';
             
-            // 仅对个别超长单词微调缩小，确保不超框
-            while (el.offsetWidth > maxWidth && fontSize > 24) {
+            // 仅对极个别超长单词微调缩小，保证清晰巨型大字
+            while (el.offsetWidth > maxWidth && fontSize > 28) {
                 fontSize -= 2;
                 el.style.fontSize = fontSize + 'px';
             }
@@ -664,7 +670,7 @@
             
             const fileName = images[currentIndex];
             const displayName = fileName.split('.')[0];
-            const fullPath = "Edibujar/" + fileName + "?v=" + new Date().getTime();
+            const fullPath = imageFolderPath + fileName + "?v=" + new Date().getTime();
 
             isRevealed = false;
             imgElement.style.display = 'none';
@@ -685,13 +691,24 @@
             // 设置文字后立即调用缩放函数
             fitText(textLabel);
 
-            // 预加载图片
+            // 预加载图片（增加多途径备用容错，如大小写切换）
             imgElement.src = fullPath;
             imgElement.onload = function() {
-                console.log('Preloaded: ' + fileName);
+                console.log('Preloaded success: ' + fullPath);
             };
             imgElement.onerror = function() {
-                console.warn('Preload failed: ' + fileName);
+                console.warn('Preload failed for: ' + fullPath + ', trying alternate casing...');
+                // 自动尝试大小写容错路径
+                const altFolder = imageFolderPath.startsWith("Edibujar") ? "edibujar/" : "Edibujar/";
+                const altPath = altFolder + fileName;
+                
+                // 如果备用路径成功，更新当前使用的路径
+                const tempImg = new Image();
+                tempImg.src = altPath;
+                tempImg.onload = function() {
+                    imageFolderPath = altFolder;
+                    imgElement.src = altPath;
+                };
             };
         }
 
