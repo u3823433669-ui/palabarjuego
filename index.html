@@ -1016,23 +1016,24 @@
         };
 
         const enemyThreeKingdomsHeroes = [
-            { name: "鬼神吕布", title: "无双逆贼", icon: "👹", hp: 3800, maxHp: 3800, atk: 180, speed: 0.65, radius: 15, armor: 0.6, auraColor: "#ef4444", isRanged: true, range: 150, rate: 1.2 },
-            { name: "暴君董卓", title: "西凉魔王", icon: "👑", hp: 5200, maxHp: 5200, atk: 140, speed: 0.45, radius: 17, armor: 0.5, auraColor: "#a855f7", isRanged: true, range: 130, rate: 1.5 },
-            { name: "魔将华雄", title: "泗水关守将", icon: "⚔️", hp: 2400, maxHp: 2400, atk: 135, speed: 0.75, radius: 13, armor: 0.7, auraColor: "#f97316", isRanged: false, range: 30, rate: 1.0 },
-            { name: "河北颜良", title: "袁绍大将", icon: "🗡️", hp: 2600, maxHp: 2600, atk: 145, speed: 0.8, radius: 13, armor: 0.7, auraColor: "#facc15", isRanged: false, range: 30, rate: 1.0 },
-            { name: "河北文丑", title: "袁绍悍将", icon: "🪓", hp: 2700, maxHp: 2700, atk: 150, speed: 0.75, radius: 13, armor: 0.7, auraColor: "#84cc16", isRanged: false, range: 30, rate: 1.0 },
-            { name: "天公张角", title: "黄巾教主", icon: "⚡", hp: 2200, maxHp: 2200, atk: 170, speed: 0.6, radius: 12, armor: 0.8, auraColor: "#38bdf8", isRanged: true, range: 160, rate: 1.3 }
+            { name: "鬼神吕布", title: "无双逆贼", icon: "👹", hp: 3800, maxHp: 3800, atk: 180, speed: 0.35, radius: 15, armor: 0.6, auraColor: "#ef4444", isRanged: true, range: 150, rate: 1.2 },
+            { name: "暴君董卓", title: "西凉魔王", icon: "👑", hp: 5200, maxHp: 5200, atk: 140, speed: 0.25, radius: 17, armor: 0.5, auraColor: "#a855f7", isRanged: true, range: 130, rate: 1.5 },
+            { name: "魔将华雄", title: "泗水关守将", icon: "⚔️", hp: 2400, maxHp: 2400, atk: 135, speed: 0.35, radius: 13, armor: 0.7, auraColor: "#f97316", isRanged: false, range: 30, rate: 1.0 },
+            { name: "河北颜良", title: "袁绍大将", icon: "🗡️", hp: 2600, maxHp: 2600, atk: 145, speed: 0.38, radius: 13, armor: 0.7, auraColor: "#facc15", isRanged: false, range: 30, rate: 1.0 },
+            { name: "河北文丑", title: "袁绍悍将", icon: "🪓", hp: 2700, maxHp: 2700, atk: 150, speed: 0.36, radius: 13, armor: 0.7, auraColor: "#84cc16", isRanged: false, range: 30, rate: 1.0 },
+            { name: "天公张角", title: "黄巾教主", icon: "⚡", hp: 2200, maxHp: 2200, atk: 170, speed: 0.30, radius: 12, armor: 0.8, auraColor: "#38bdf8", isRanged: true, range: 160, rate: 1.3 }
         ];
 
         let currentHeroChoices = { archer: null, melee: null };
 
         const tdState = {
             running: true,
+            pausedByModal: false,
             wordCount: 0,
             wordsProgress: 0,      // 0~10 (每10词+1建造点)
             heroWordsProgress: 0,  // 0~30 (每30词选三国英雄)
             pendingHeroChoices: 0,
-            buildPoints: 0,        // 可用升级点数
+            buildPoints: 1,        // 可用升级点数 (开局赠送1点)
 
             castle: {
                 x: 10,
@@ -1043,24 +1044,25 @@
                 maxHp: 10000
             },
 
-            // 15 种可建造、升级与科技研习项目 (树状结构)
+            // 16 种可建造、升级与科技研习项目 (树状结构，大类开局直接可升级)
             defenses: {
                 // === 🛡️ 城堡与铠甲分支 ===
                 armor1: { id: 'armor1', name: '🛡️ 基础加固铠甲', level: 0, maxLevel: 3, icon: '🛡️', prereq: null, branch: 'armor' },
                 armor2: { id: 'armor2', name: '🦾 精钢重型锁子甲', level: 0, maxLevel: 3, icon: '🦾', prereq: 'armor1', branch: 'armor' },
-                moat: { id: 'moat', name: '🌊 护城河工程', level: 0, maxLevel: 5, slowPct: 0.45, dps: 25, icon: '🌊', prereq: 'armor2', branch: 'armor' },
+                moat: { id: 'moat', name: '🌊 护城河工程', level: 1, maxLevel: 5, slowPct: 0.45, dps: 25, corpses: 0, maxCorpses: 10, icon: '🌊', prereq: null, branch: 'armor' },
                 chevalDeFrise: { id: 'chevalDeFrise', name: '🚧 尖刺拒马阵', level: 0, maxLevel: 4, hp: 0, maxHp: 1000, atk: 35, icon: '🚧', prereq: 'moat', branch: 'armor' },
 
                 // === 🏹 远射与弓弩分支 ===
                 archery: { id: 'archery', name: '🏹 射术与箭技精通', level: 0, maxLevel: 3, icon: '🏹', prereq: null, branch: 'archery' },
                 crossbow: { id: 'crossbow', name: '🎯 劲弩与强弩连发', level: 0, maxLevel: 3, icon: '🎯', prereq: 'archery', branch: 'archery' },
                 wallArchers: { id: 'wallArchers', name: '🏹💂 精锐长弓手', level: 0, maxLevel: 5, count: 0, hp: 0, maxHp: 0, atk: 22, rate: 1.0, timer: 0, icon: '🏹💂', prereq: 'crossbow', branch: 'archery' },
-                leftTower: { id: 'leftTower', name: '🏹 左翼防空箭塔', level: 0, maxLevel: 5, hp: 0, maxHp: 600, atk: 35, rate: 0.9, timer: 0, range: 130, x: 40, y: 185, icon: '🏰', prereq: 'archery', branch: 'archery' },
-                centerTower: { id: 'centerTower', name: '🏹 主堡中央箭塔', level: 0, maxLevel: 5, hp: 0, maxHp: 800, atk: 48, rate: 0.8, timer: 0, range: 140, x: 160, y: 185, icon: '🏰', prereq: 'archery', branch: 'archery' },
-                rightTower: { id: 'rightTower', name: '🏹 右翼碉堡箭塔', level: 0, maxLevel: 5, hp: 0, maxHp: 600, atk: 35, rate: 0.9, timer: 0, range: 130, x: 280, y: 185, icon: '🏰', prereq: 'archery', branch: 'archery' },
+                leftTower: { id: 'leftTower', name: '🏹 左翼防空箭塔', level: 0, maxLevel: 5, hp: 0, maxHp: 600, atk: 35, rate: 0.9, timer: 0, range: 130, x: 40, y: 185, icon: '🏰', prereq: null, branch: 'archery' },
+                centerTower: { id: 'centerTower', name: '🏹 主堡中央箭塔', level: 0, maxLevel: 5, hp: 0, maxHp: 800, atk: 48, rate: 0.8, timer: 0, range: 140, x: 160, y: 185, icon: '🏰', prereq: null, branch: 'archery' },
+                rightTower: { id: 'rightTower', name: '🏹 右翼碉堡箭塔', level: 0, maxLevel: 5, hp: 0, maxHp: 600, atk: 35, rate: 0.9, timer: 0, range: 130, x: 280, y: 185, icon: '🏰', prereq: null, branch: 'archery' },
 
                 // === 💥 攻城与机关分支 ===
                 traps: { id: 'traps', name: '⚙️ 机关工程学', level: 0, maxLevel: 3, icon: '⚙️', prereq: null, branch: 'siege' },
+                pitfall: { id: 'pitfall', name: '🕳️ 隐蔽陷坑阵', level: 0, maxLevel: 5, slowPct: 0.45, dps: 30, durability: 0, maxDurability: 0, icon: '🕳️', prereq: 'traps', branch: 'siege' },
                 boilingOil: { id: 'boilingOil', name: '🧪 金汁与毒热油', level: 0, maxLevel: 5, atk: 55, timer: 0, charges: 0, icon: '🧪', prereq: 'traps', branch: 'siege' },
                 rollingLog: { id: 'rollingLog', name: '🪵 巨型带刺滚木', level: 0, maxLevel: 3, charges: 0, icon: '🪵', prereq: 'traps', branch: 'siege' },
                 catapult: { id: 'catapult', name: '🪨 烈焰巨石投石机', level: 0, maxLevel: 5, atk: 140, rate: 3.2, timer: 0, icon: '🪨', prereq: 'traps', branch: 'siege' },
@@ -1172,11 +1174,17 @@
             }
 
             modal.style.display = 'flex';
+            tdState.pausedByModal = true;
         }
 
         function selectHeroChoice(type) {
             const modal = document.getElementById('heroModal');
             if (modal) modal.style.display = 'none';
+
+            const buildModal = document.getElementById('buildModal');
+            if (!buildModal || buildModal.style.display === 'none') {
+                tdState.pausedByModal = false;
+            }
 
             const chosen = currentHeroChoices[type];
             if (!chosen) return;
@@ -1229,19 +1237,20 @@
             // === 🛡️ 城堡与铠甲分支 ===
             { key: 'armor1', name: '🛡️ 基础加固铠甲', branch: 'armor', prereq: null, prereqName: null, desc: '增强全军与城墙基础护甲！提升城墙上限 +1500，且城墙与所有友军受到伤害 -10%。' },
             { key: 'armor2', name: '🦾 精钢重型锁子甲', branch: 'armor', prereq: 'armor1', prereqName: '基础加固铠甲', desc: '打制精钢连环锁子甲！城墙上限 +2500，全员减伤效果额外再提升 +10%！' },
-            { key: 'moat', name: '🌊 护城河工程', branch: 'armor', prereq: 'armor2', prereqName: '精钢重型锁子甲', desc: '在城前开挖并不断加宽护城河！大幅减速陆军（45%~85%）并造成剧烈淹溺伤害。' },
+            { key: 'moat', name: '🌊 护城河工程', branch: 'armor', prereq: null, prereqName: null, desc: '开局即拥有的急流护城河！淹溺减速敌兵。注意：填入 10 具敌尸后护城河会被填平消失，可重新挖通加宽！' },
             { key: 'chevalDeFrise', name: '🚧 尖刺拒马阵', branch: 'armor', prereq: 'moat', prereqName: '护城河工程', desc: '在护城河前架设密集的反伤尖刺拒马，强行拦截敌兵前进并反弹大量刺伤。' },
 
             // === 🏹 远射与弓弩分支 ===
             { key: 'archery', name: '🏹 射术与箭技精通', branch: 'archery', prereq: null, prereqName: null, desc: '训练弓箭手与塔楼射手！使所有箭塔、英雄射手与城墙弓箭队伤害提升 +20%。' },
+            { key: 'leftTower', name: '🏹 左翼防空箭塔', branch: 'archery', prereq: null, prereqName: null, desc: '城墙左翼精钢箭塔，自带 90% 闪避率，高频击杀左方敌军与飞行兽。' },
+            { key: 'centerTower', name: '🏹 主堡中央箭塔', branch: 'archery', prereq: null, prereqName: null, desc: '城墙中央核心主堡箭塔，拥有 90% 闪避率与极强高额单体穿透伤害。' },
+            { key: 'rightTower', name: '🏹 右翼碉堡箭塔', branch: 'archery', prereq: null, prereqName: null, desc: '城墙右翼守卫塔，90% 超高闪避率，稳定压制右侧战场进犯之敌。' },
             { key: 'crossbow', name: '🎯 劲弩与强弩连发', branch: 'archery', prereq: 'archery', prereqName: '射术与箭技精通', desc: '换装破甲重弩！所有远程建筑与强弩射速提升 15%，提升贯穿破甲伤害。' },
             { key: 'wallArchers', name: '🏹💂 精锐长弓手队', branch: 'archery', prereq: 'crossbow', prereqName: '劲弩与强弩连发', desc: '招募与组建精锐城墙长弓手小队！高耸城墙上向整片战场倾泻密集漫天箭雨。' },
-            { key: 'leftTower', name: '🏹 左翼防空箭塔', branch: 'archery', prereq: 'archery', prereqName: '射术与箭技精通', desc: '城墙左翼精钢箭塔，自带 90% 闪避率，高频击杀左方敌军与飞行兽。' },
-            { key: 'centerTower', name: '🏹 主堡中央箭塔', branch: 'archery', prereq: 'archery', prereqName: '射术与箭技精通', desc: '城墙中央核心主堡箭塔，拥有 90% 闪避率与极强高额单体穿透伤害。' },
-            { key: 'rightTower', name: '🏹 右翼碉堡箭塔', branch: 'archery', prereq: 'archery', prereqName: '射术与箭技精通', desc: '城墙右翼守卫塔，90% 超高闪避率，稳定压制右侧战场进犯之敌。' },
 
             // === 💥 攻城与机关分支 ===
             { key: 'traps', name: '⚙️ 机关工程学', branch: 'siege', prereq: null, prereqName: null, desc: '研究墨家城防机关！解锁机关陷阱库，并使所有机关与攻城器伤害提升 +25%。' },
+            { key: 'pitfall', name: '🕳️ 隐蔽陷坑阵', branch: 'siege', prereq: 'traps', prereqName: '机关工程学', desc: '在城前排布隐藏尖刺陷坑！减速并造成刺戳伤。注意：造成积累伤害后会塌陷失效，可再次挖设！' },
             { key: 'boilingOil', name: '🧪 金汁与毒热油', branch: 'siege', prereq: 'traps', prereqName: '机关工程学', desc: '城墙沿线备好滚烫毒热油，当敌军贴墙时倾倒形成火海持续灼烧！' },
             { key: 'rollingLog', name: '🪵 巨型带刺滚木', branch: 'siege', prereq: 'traps', prereqName: '机关工程学', desc: '带刺巨型滚木！作动后顺着战场一路碾压全屏所有地面陆军敌兵！' },
             { key: 'catapult', name: '🪨 烈焰巨石投石机', branch: 'siege', prereq: 'traps', prereqName: '机关工程学', desc: '城墙高台重型投石机，发射轰鸣烈焰巨石造成大范围爆裂伤。' },
@@ -1273,6 +1282,7 @@
 
         // 打开/关闭建造升级弹窗
         function openBuildModal() {
+            tdState.pausedByModal = true;
             const modal = document.getElementById('buildModal');
             if (modal) {
                 renderTechTreeModal();
@@ -1284,6 +1294,10 @@
             const modal = document.getElementById('buildModal');
             if (modal) {
                 modal.style.display = 'none';
+            }
+            const heroModal = document.getElementById('heroModal');
+            if (!heroModal || heroModal.style.display === 'none') {
+                tdState.pausedByModal = false;
             }
         }
 
@@ -1297,8 +1311,8 @@
 
             const branchDefs = [
                 { id: 'armor', title: '🛡️ 城堡与铠甲分支', color: '#38bdf8', items: ['armor1', 'armor2', 'moat', 'chevalDeFrise'] },
-                { id: 'archery', title: '🏹 远射与弓弩分支', color: '#fde047', items: ['archery', 'crossbow', 'wallArchers', 'leftTower', 'centerTower', 'rightTower'] },
-                { id: 'siege', title: '💥 攻城与机关分支', color: '#f97316', items: ['traps', 'boilingOil', 'rollingLog', 'catapult', 'ballista'] }
+                { id: 'archery', title: '🏹 远射与弓弩分支', color: '#fde047', items: ['archery', 'leftTower', 'centerTower', 'rightTower', 'crossbow', 'wallArchers'] },
+                { id: 'siege', title: '💥 攻城与机关分支', color: '#f97316', items: ['traps', 'pitfall', 'boilingOil', 'rollingLog', 'catapult', 'ballista'] }
             ];
 
             const activeBranches = currentTechBranchFilter === 'all' 
@@ -1454,9 +1468,11 @@
                     addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🏹💂 精锐长弓手队进驻城墙！(队伍规模: ${def.count}人)`, "#fde047");
                     addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#fde047", 20);
                 } else if (key === 'moat') {
+                    def.corpses = 0;
+                    def.maxCorpses = 10 * def.level;
                     def.slowPct = Math.min(0.85, 0.45 + (def.level - 1) * 0.1);
-                    def.dps += 22;
-                    addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🌊 护城河加宽升级! (减速${Math.round(def.slowPct*100)}% | DPS:${def.dps})`, "#38bdf8");
+                    def.dps = 25 + (def.level - 1) * 22;
+                    addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🌊 护城河清淤/加宽! (容量:${def.maxCorpses}尸体 | 减速${Math.round(def.slowPct*100)}%)`, "#38bdf8");
                     addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#38bdf8", 20);
                 } else if (key === 'chevalDeFrise') {
                     def.maxHp += 800;
@@ -1482,6 +1498,13 @@
                 } else if (key === 'rollingLog') {
                     def.charges += 1;
                     addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🪵 巨型带刺滚木充能完成!`, "#d97706");
+                    addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#d97706", 20);
+                } else if (key === 'pitfall') {
+                    def.maxDurability = 800 * def.level;
+                    def.durability = def.maxDurability;
+                    def.slowPct = Math.min(0.85, 0.45 + (def.level - 1) * 0.08);
+                    def.dps = 30 + (def.level - 1) * 25;
+                    addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🕳️ [隐蔽陷坑阵] 挖设/重构! (耐久:${def.durability}伤害 | 减速${Math.round(def.slowPct*100)}%)`, "#f97316");
                     addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#d97706", 20);
                 }
             }
@@ -1598,10 +1621,11 @@
             setupCanvasDimensions();
 
             tdState.castle.hp = tdState.castle.maxHp = 10000;
+            tdState.pausedByModal = false;
             tdState.wordsProgress = 0;
             tdState.heroWordsProgress = 0;
             tdState.pendingHeroChoices = 0;
-            tdState.buildPoints = 0;
+            tdState.buildPoints = 1; // 开局免费赠送 1 点科技点！
             tdState.gameTime = 0;
             tdState.waveCount = 1;
             tdState.totalKills = 0;
@@ -1612,9 +1636,21 @@
             // 重置所有防御设施
             for (let k in tdState.defenses) {
                 const d = tdState.defenses[k];
-                d.level = 0;
                 d.timer = 0;
                 if (d.maxHp) d.hp = 0;
+                if (k === 'moat') {
+                    d.level = 1;
+                    d.corpses = 0;
+                    d.maxCorpses = 10;
+                    d.slowPct = 0.45;
+                    d.dps = 25;
+                } else if (k === 'pitfall') {
+                    d.level = 0;
+                    d.durability = 0;
+                    d.maxDurability = 0;
+                } else {
+                    d.level = 0;
+                }
                 if (k === 'chevalDeFrise') { d.hp = d.maxHp = 1000; }
                 if (k === 'rollingLog') { d.charges = 0; }
                 if (k === 'boilingOil') { d.charges = 0; }
@@ -1630,6 +1666,8 @@
             tdState.winner = null;
             tdState.running = true;
 
+            addFloatingText(tdState.castle.width / 2, tdState.castle.y - 30, "🎉 开局赠送 1 点科技点！可立即升级或建造箭塔！", "#fde047");
+
             updateBattleUI();
         }
 
@@ -1639,19 +1677,19 @@
             tdState.waveCount = wave;
 
             const enemyTypes = [
-                { type: 'goblin', icon: '👺', name: '哥布林先锋', hp: 90, speed: 1.25, atk: 16, radius: 8, armor: 1.0, isFly: false, isRanged: false },
-                { type: 'orc', icon: '👹', name: '兽人步兵', hp: 190, speed: 0.9, atk: 28, radius: 10, armor: 1.0, isFly: false, isRanged: false },
-                { type: 'archer', icon: '🏹', name: '敌军弓箭手', hp: 110, speed: 0.85, atk: 22, radius: 8, armor: 0.95, isFly: false, isRanged: true, range: 140, rate: 1.4 },
-                { type: 'shield', icon: '🛡️', name: '重铠大盾兵', hp: 380, speed: 0.7, atk: 24, radius: 11, armor: 0.5, isFly: false, isRanged: false },
-                { type: 'wolf', icon: '🐺', name: '座狼骑兵', hp: 160, speed: 1.5, atk: 35, radius: 10, armor: 0.9, isFly: false, isRanged: false },
-                { type: 'ram', icon: '🪵', name: '攻城撞木车', hp: 650, speed: 0.55, atk: 110, radius: 13, armor: 0.8, isFly: false, isRanged: false },
-                { type: 'gargoyle', icon: '🦇', name: '飞天石像鬼', hp: 170, speed: 1.1, atk: 32, radius: 9, armor: 1.0, isFly: true, isRanged: false }
+                { type: 'goblin', icon: '👺', name: '哥布林先锋', hp: 90, speed: 0.55, atk: 16, radius: 8, armor: 1.0, isFly: false, isRanged: false },
+                { type: 'orc', icon: '👹', name: '兽人步兵', hp: 190, speed: 0.40, atk: 28, radius: 10, armor: 1.0, isFly: false, isRanged: false },
+                { type: 'archer', icon: '🏹', name: '敌军弓箭手', hp: 110, speed: 0.38, atk: 22, radius: 8, armor: 0.95, isFly: false, isRanged: true, range: 140, rate: 1.4 },
+                { type: 'shield', icon: '🛡️', name: '重铠大盾兵', hp: 380, speed: 0.30, atk: 24, radius: 11, armor: 0.5, isFly: false, isRanged: false },
+                { type: 'wolf', icon: '🐺', name: '座狼骑兵', hp: 160, speed: 0.65, atk: 35, radius: 10, armor: 0.9, isFly: false, isRanged: false },
+                { type: 'ram', icon: '🪵', name: '攻城撞木车', hp: 650, speed: 0.25, atk: 110, radius: 13, armor: 0.8, isFly: false, isRanged: false },
+                { type: 'gargoyle', icon: '🦇', name: '飞天石像鬼', hp: 170, speed: 0.48, atk: 32, radius: 9, armor: 1.0, isFly: true, isRanged: false }
             ];
 
             // 30 轮后出现敌军攻城投石车 (专门轰炸我方箭塔)
             if (wave > 30) {
                 enemyTypes.push(
-                    { type: 'catapult', icon: '☄️', name: '敌军攻城投石车', hp: 520, speed: 0.45, atk: 140, radius: 14, armor: 0.7, isFly: false, isRanged: true, range: 220, rate: 2.2, isCatapult: true }
+                    { type: 'catapult', icon: '☄️', name: '敌军攻城投石车', hp: 520, speed: 0.20, atk: 140, radius: 14, armor: 0.7, isFly: false, isRanged: true, range: 220, rate: 2.2, isCatapult: true }
                 );
             }
 
@@ -1659,11 +1697,11 @@
             
             // 30 轮后有更高概率刷投石车
             if (wave > 30 && Math.random() < 0.35) {
-                choice = { type: 'catapult', icon: '☄️', name: '敌军攻城投石车', hp: 520 + wave * 40, speed: 0.45, atk: 140 + wave * 10, radius: 14, armor: 0.7, isFly: false, isRanged: true, range: 220, rate: 2.2, isCatapult: true };
+                choice = { type: 'catapult', icon: '☄️', name: '敌军攻城投石车', hp: 520 + wave * 40, speed: 0.20, atk: 140 + wave * 10, radius: 14, armor: 0.7, isFly: false, isRanged: true, range: 220, rate: 2.2, isCatapult: true };
             }
 
             if (wave > 1 && wave % 5 === 0 && Math.random() < 0.25) {
-                choice = { type: 'ogre', icon: '👹👑', name: '独眼巨魔酋长', hp: 1600 + wave * 100, speed: 0.45, atk: 140, radius: 14, armor: 0.7, isFly: false, isBoss: true, isRanged: false };
+                choice = { type: 'ogre', icon: '👹👑', name: '独眼巨魔酋长', hp: 1600 + wave * 100, speed: 0.20, atk: 140, radius: 14, armor: 0.7, isFly: false, isBoss: true, isRanged: false };
             }
 
             const spawnX = 20 + Math.random() * (tdState.castle.width - 40);
@@ -1763,7 +1801,7 @@
             const dt = Math.min(0.08, (timestamp - lastTimestamp) / 1000);
             lastTimestamp = timestamp;
 
-            if (tdState.running && !tdState.winner) {
+            if (tdState.running && !tdState.winner && !tdState.pausedByModal) {
                 tdState.gameTime += dt;
                 updateTowerDefense(dt);
             }
@@ -1861,11 +1899,54 @@
                     const moatHeight = 10 + moatLvl * 6;
                     const calcMoatY = castleY - 28 - moatHeight / 2;
                     if (enemy.y >= calcMoatY - 2 && enemy.y <= calcMoatY + moatHeight + 2) {
-                        enemy.slowFactor = Math.max(0.15, 1.0 - tdState.defenses.moat.slowPct);
+                        enemy.slowFactor = Math.min(enemy.slowFactor, Math.max(0.15, 1.0 - tdState.defenses.moat.slowPct));
                         const dps = tdState.defenses.moat.dps * dt;
                         enemy.hp -= dps;
                         if (Math.random() < 0.2) {
                             addParticles(enemy.x, enemy.y, "#38bdf8", 2);
+                        }
+
+                        // 🌊 随机溺亡判定 (概率受护城河等级影响)
+                        const drownChance = (0.10 + moatLvl * 0.05) * dt;
+                        if (Math.random() < drownChance) {
+                            if (!enemy.isBoss && !enemy.isEnemyHero) {
+                                enemy.hp = 0; // 敌兵直接呛水卷入急流溺亡
+                                addFloatingText(enemy.x, enemy.y - 12, "🌊 急流漩涡溺亡!", "#38bdf8");
+                                addParticles(enemy.x, enemy.y, "#0284c7", 15);
+                            } else {
+                                const drownDmg = 250 + moatLvl * 80;
+                                enemy.hp -= drownDmg;
+                                addFloatingText(enemy.x, enemy.y - 12, `🌊 狂涛溺伤 -${drownDmg}!`, "#0284c7");
+                                addParticles(enemy.x, enemy.y, "#38bdf8", 12);
+                            }
+                        }
+                    }
+                }
+
+                // ①b 隐蔽陷坑阵减速与刺戳伤 (非飞行敌军)
+                const pitfallDef = tdState.defenses.pitfall;
+                if (!enemy.isFly && pitfallDef && pitfallDef.level > 0 && pitfallDef.durability > 0) {
+                    const pitfallY = castleY - 55;
+                    if (enemy.y >= pitfallY - 8 && enemy.y <= pitfallY + 12) {
+                        enemy.slowFactor = Math.min(enemy.slowFactor, Math.max(0.15, 1.0 - pitfallDef.slowPct));
+                        const dps = pitfallDef.dps * dt;
+                        const actualDmg = Math.min(enemy.hp, dps);
+                        enemy.hp -= dps;
+                        pitfallDef.durability -= actualDmg;
+
+                        if (Math.random() < 0.15) {
+                            addParticles(enemy.x, enemy.y, "#78350f", 2);
+                        }
+
+                        if (pitfallDef.durability <= 0) {
+                            pitfallDef.durability = 0;
+                            pitfallDef.level--;
+                            addFloatingText(tdState.castle.width / 2 + tdState.castle.x, pitfallY, "🕳️ 隐蔽陷坑阵填满塌陷失效！", "#ea580c");
+                            addParticles(tdState.castle.width / 2 + tdState.castle.x, pitfallY, "#78350f", 20);
+                            if (pitfallDef.level > 0) {
+                                pitfallDef.maxDurability = 800 * pitfallDef.level;
+                                pitfallDef.durability = pitfallDef.maxDurability;
+                            }
                         }
                     }
                 }
@@ -2003,6 +2084,29 @@
                     tdState.totalKills++;
                     addParticles(enemy.x, enemy.y, enemy.isEnemyHero ? "#ef4444" : (enemy.isBoss ? "#fde047" : "#ef4444"), enemy.isEnemyHero ? 25 : (enemy.isBoss ? 20 : 8));
                     addFloatingText(enemy.x, enemy.y - 10, enemy.isEnemyHero ? `💀 斩杀三国魔将[${enemy.name}]!` : `+10 💀`, enemy.isEnemyHero ? "#fde047" : "#10b981");
+
+                    // 🌊 护城河填尸消失机制
+                    const moatDef = tdState.defenses.moat;
+                    if (!enemy.isFly && moatDef && moatDef.level > 0) {
+                        const moatLvl = moatDef.level;
+                        const moatHeight = 10 + moatLvl * 6;
+                        const calcMoatY = castleY - 28 - moatHeight / 2;
+                        if (enemy.y >= calcMoatY - 12 && enemy.y <= calcMoatY + moatHeight + 12) {
+                            moatDef.corpses = (moatDef.corpses || 0) + 1;
+                            const maxC = moatDef.maxCorpses || (10 * moatLvl);
+                            addFloatingText(enemy.x, enemy.y - 18, `🌊 尸体填河 (${moatDef.corpses}/${maxC})`, "#0284c7");
+                            if (moatDef.corpses >= maxC) {
+                                moatDef.corpses = 0;
+                                moatDef.level--;
+                                addFloatingText(tdState.castle.width / 2 + tdState.castle.x, calcMoatY, "🌊 护城河已被敌军尸体填平陷落！", "#f43f5e");
+                                addParticles(tdState.castle.width / 2 + tdState.castle.x, calcMoatY, "#0284c7", 25);
+                                if (moatDef.level > 0) {
+                                    moatDef.maxCorpses = 10 * moatDef.level;
+                                }
+                            }
+                        }
+                    }
+
                     tdState.enemies.splice(i, 1);
                 }
             }
@@ -2499,10 +2603,38 @@
 
             // 2. 护城河 (若已建造，等级越高越宽)
             const castleY = tdState.castle.y;
-            if (tdState.defenses.moat.level > 0) {
-                const moatLvl = tdState.defenses.moat.level;
+
+            // 2b. 隐蔽陷坑阵 (若已建造)
+            const pitfallDef = tdState.defenses.pitfall;
+            if (pitfallDef && pitfallDef.level > 0 && pitfallDef.durability > 0) {
+                const pitfallY = castleY - 55;
+                ctx.fillStyle = '#2d1b0e';
+                ctx.strokeStyle = '#78350f';
+                ctx.lineWidth = 1;
+
+                for (let x = 25; x < w - 25; x += 22) {
+                    ctx.beginPath();
+                    ctx.ellipse(x, pitfallY, 8, 4, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+
+                    // 陷坑里的竹签尖刺
+                    ctx.fillStyle = '#f59e0b';
+                    ctx.fillRect(x - 1, pitfallY - 2, 2, 4);
+                }
+
+                ctx.fillStyle = '#fde047';
+                ctx.font = '9px sans-serif';
+                ctx.textAlign = 'left';
+                ctx.fillText(`🕳️ 陷坑阵 Lv.${pitfallDef.level} (耐久:${Math.ceil(pitfallDef.durability)}/${pitfallDef.maxDurability})`, 15, pitfallY - 5);
+            }
+
+            if (tdState.defenses.moat && tdState.defenses.moat.level > 0) {
+                const moatDef = tdState.defenses.moat;
+                const moatLvl = moatDef.level;
                 const moatHeight = 10 + moatLvl * 6; // Lv1: 16px, Lv5: 40px
                 const moatY = castleY - 28 - moatHeight / 2;
+                const maxC = moatDef.maxCorpses || (10 * moatLvl);
 
                 ctx.fillStyle = '#0284c7';
                 ctx.fillRect(10, moatY, w - 20, moatHeight);
@@ -2523,11 +2655,11 @@
                 }
                 ctx.stroke();
 
-                // 标识等级与宽度
+                // 标识等级与容量/填尸进度
                 ctx.fillStyle = '#e0f2fe';
                 ctx.font = '9px sans-serif';
                 ctx.textAlign = 'right';
-                ctx.fillText(`🌊 护城河 Lv.${moatLvl} (加宽${moatHeight}px)`, w - 15, moatY + moatHeight - 2);
+                ctx.fillText(`🌊 护城河 Lv.${moatLvl} (填尸:${moatDef.corpses || 0}/${maxC})`, w - 15, moatY + moatHeight - 2);
             }
 
             // 3. 尖刺拒马 (若已建造且未毁)
@@ -2762,7 +2894,22 @@
             }
             ctx.globalAlpha = 1.0;
 
-            // 14. 沦陷横幅
+            // 14. 升级/招募中暂停状态横幅
+            if (tdState.pausedByModal && !tdState.winner) {
+                ctx.fillStyle = 'rgba(15, 23, 42, 0.6)';
+                ctx.fillRect(10, 8, w - 20, 24);
+                ctx.strokeStyle = '#fde047';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(10, 8, w - 20, 24);
+
+                ctx.fillStyle = '#fde047';
+                ctx.font = 'bold 11px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('⏸️ 升级/招募中 — 战场已暂停', w / 2, 20);
+            }
+
+            // 15. 沦陷横幅
             if (tdState.winner === 'defeat') {
                 ctx.fillStyle = 'rgba(2, 6, 23, 0.88)';
                 ctx.fillRect(0, 0, w, h);
