@@ -164,8 +164,61 @@
         }
         #battleCanvas {
             width: 100%;
-            height: 340px;
+            height: 220px;
             display: block;
+        }
+
+        /* ⚔️ 战斗时间：最大化战斗场景，背词禁用并收起 */
+        .layout-wrapper.battle-maximized {
+            flex-direction: column !important;
+            align-items: center !important;
+            max-width: 1200px !important;
+            width: 96% !important;
+            gap: 14px !important;
+        }
+        .layout-wrapper.battle-maximized .controls {
+            width: 100% !important;
+            max-width: 1100px !important;
+            position: static !important;
+            order: 1 !important;
+        }
+        .layout-wrapper.battle-maximized .mini-map-box {
+            padding: 16px 20px !important;
+            border-color: #ef4444 !important;
+            box-shadow: 0 20px 50px rgba(239, 68, 68, 0.25) !important;
+        }
+        .layout-wrapper.battle-maximized #battleCanvas {
+            height: 380px !important;
+        }
+        .layout-wrapper.battle-maximized .container {
+            order: 2 !important;
+            width: 100% !important;
+            max-width: 1100px !important;
+            opacity: 0.65;
+            transition: all 0.3s ease;
+        }
+        .layout-wrapper.battle-maximized .card {
+            min-height: 100px !important;
+            max-height: 120px !important;
+            padding: 8px 16px !important;
+            border-width: 3px !important;
+            border-color: #64748b !important;
+            cursor: not-allowed !important;
+            background: #0f172a !important;
+        }
+        .layout-wrapper.battle-maximized .filename {
+            font-size: 2.2rem !important;
+            color: #94a3b8 !important;
+        }
+        .layout-wrapper.battle-maximized #displayImage {
+            max-height: 80px !important;
+        }
+        .layout-wrapper.battle-maximized .btn-next-main,
+        .layout-wrapper.battle-maximized .floating-next-btn {
+            opacity: 0.35 !important;
+            cursor: not-allowed !important;
+            filter: grayscale(80%) !important;
+            pointer-events: none !important;
         }
         .base-hp-bars {
             display: grid;
@@ -541,9 +594,10 @@
             <!-- 科技树分支切换 Filter Tabs -->
             <div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;">
                 <button onclick="setTechBranchFilter('all')" class="tech-tab-btn" id="tabBtn-all" style="background: linear-gradient(135deg, #f97316, #ea580c); color: white; border: none; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 0.82rem; cursor: pointer;">🌳 全部分支</button>
+                <button onclick="setTechBranchFilter('repair')" class="tech-tab-btn" id="tabBtn-repair" style="background: #1e293b; color: #10b981; border: 1px solid #10b981; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 0.82rem; cursor: pointer;">🛠️ 机关修复</button>
                 <button onclick="setTechBranchFilter('armor')" class="tech-tab-btn" id="tabBtn-armor" style="background: #1e293b; color: #38bdf8; border: 1px solid #38bdf8; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 0.82rem; cursor: pointer;">🛡️ 铠甲与城防</button>
                 <button onclick="setTechBranchFilter('archery')" class="tech-tab-btn" id="tabBtn-archery" style="background: #1e293b; color: #fde047; border: 1px solid #fde047; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 0.82rem; cursor: pointer;">🏹 弓弩与长弓手</button>
-                <button onclick="setTechBranchFilter('siege')" class="tech-tab-btn" id="tabBtn-siege" style="background: #1e293b; color: #f97316; border: 1px solid #f97316; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 0.82rem; cursor: pointer;">💥 攻城与机关</button>
+                <button onclick="setTechBranchFilter('siege')" class="tech-tab-btn" id="tabBtn-siege" style="background: #1e293b; color: #f97316; border: 1px solid #f97316; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 0.82rem; cursor: pointer;">💥 攻城与器械</button>
                 <button onclick="setTechBranchFilter('heroTech')" class="tech-tab-btn" id="tabBtn-heroTech" style="background: #1e293b; color: #a855f7; border: 1px solid #a855f7; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 0.82rem; cursor: pointer;">👑 武将与军略</button>
             </div>
 
@@ -571,6 +625,11 @@
 
     <div class="layout-wrapper" id="layoutWrapper">
         <div class="container">
+            <!-- ⚔️ 战斗阶段锁定提示栏 (点击可立即切换) -->
+            <div id="battleLockBanner" style="display: none; background: linear-gradient(135deg, rgba(69, 10, 10, 0.95), rgba(30, 27, 75, 0.95)); border: 2px solid #ef4444; border-radius: 16px; padding: 10px 16px; color: #fca5a5; font-size: 0.92rem; font-weight: bold; margin-bottom: 10px; box-shadow: 0 4px 18px rgba(239, 68, 68, 0.3); text-align: center; cursor: pointer;" onclick="togglePhaseManually()" title="点击可立即提前切换为背诵时间">
+                ⚔️ 【战斗交战中】战场场景已最大化！背词功能已锁定 (剩余 <span id="battleRemainSec" style="color: #fde047; font-size: 1.1rem;">20</span>s) ➔ <span style="text-decoration: underline; color: #38bdf8;">点击立即进入背诵</span>
+            </div>
+
             <div class="card" id="mainCard" onclick="handleCardClick()">
                 <div id="textLabel" class="filename">READY</div>
                 <img id="displayImage" src="" alt="Card Image">
@@ -604,6 +663,7 @@
                     <div style="display: flex; align-items: center; gap: 6px;">
                         <span>🏰 城堡防守战</span>
                         <span id="waveBadge" style="font-size: 0.72rem; color: #fb7185; background: #331f28; padding: 2px 6px; border-radius: 8px;">⏱️ 第 1 波</span>
+                        <span id="phaseBadge" onclick="togglePhaseManually()" style="font-size: 0.72rem; padding: 2px 8px; border-radius: 8px; cursor: pointer; font-weight: bold; border: 1px solid #38bdf8; background: #0c4a6e; color: #38bdf8; transition: all 0.2s;" title="点击切换 背诵/战斗 阶段">📖 背诵中 20s</span>
                     </div>
                     <div style="display: flex; align-items: center; gap: 6px;">
                         <span id="weatherBadge" onclick="showWeatherInfo()" style="font-size: 0.72rem; color: #fde047; background: #1e293b; border: 1px solid #eab308; padding: 2px 7px; border-radius: 8px; cursor: pointer; transition: all 0.2s;" title="点击查看当前战场天气环境">☀️ 晴空</span>
@@ -840,6 +900,10 @@
         }
 
         function next20Words() {
+            if (typeof tdState !== 'undefined' && tdState && tdState.phase === 'battle') {
+                addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 40, "⚔️ 战斗交战中，专心指挥战场！(背词已锁定)", "#ef4444");
+                return;
+            }
             lastActionWasRandom = false;
             if (images.length === 0) return;
             if (currentIndex === -1) {
@@ -852,6 +916,10 @@
         }
 
         function nextWord() {
+            if (typeof tdState !== 'undefined' && tdState && tdState.phase === 'battle') {
+                addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 40, "⚔️ 战斗交战中，专心指挥战场！(背词已锁定)", "#ef4444");
+                return;
+            }
             lastActionWasRandom = false;
             currentIndex = (currentIndex + 1) % images.length;
             updateDisplay();
@@ -859,6 +927,10 @@
         }
 
         function dontKnowWord() {
+            if (typeof tdState !== 'undefined' && tdState && tdState.phase === 'battle') {
+                addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 40, "⚔️ 战斗交战中，专心指挥战场！(背词已锁定)", "#ef4444");
+                return;
+            }
             lastActionWasRandom = false;
             if (images.length === 0) return;
             if (currentIndex < 0) currentIndex = 0;
@@ -881,6 +953,10 @@
         }
 
         function prevWord() {
+            if (typeof tdState !== 'undefined' && tdState && tdState.phase === 'battle') {
+                addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 40, "⚔️ 战斗交战中，专心指挥战场！(背词已锁定)", "#ef4444");
+                return;
+            }
             lastActionWasRandom = false;
             if (currentIndex <= 0) {
                 currentIndex = images.length - 1;
@@ -892,6 +968,10 @@
         }
 
         function randomWord() {
+            if (typeof tdState !== 'undefined' && tdState && tdState.phase === 'battle') {
+                addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 40, "⚔️ 战斗交战中，专心指挥战场！(背词已锁定)", "#ef4444");
+                return;
+            }
             lastActionWasRandom = true;
             let newIndex;
             do {
@@ -904,6 +984,10 @@
         }
 
         function handleCardClick() {
+            if (typeof tdState !== 'undefined' && tdState && tdState.phase === 'battle') {
+                addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 40, "⚔️ 战斗交战中，专心指挥战场！(背词已锁定)", "#ef4444");
+                return;
+            }
             if (isSwiped) {
                 isSwiped = false;
                 return;
@@ -1056,32 +1140,32 @@
         // 👑 三国名将库定义 (涵盖猛将、神射雷法、修补工匠、增益与减益主将)
         const threeKingdomsHeroes = {
             melee: [
-                { id: 'guanyu', name: "关羽", title: "武圣", icon: "🗡️", role: "⚔️ 近战猛将", desc: "青龙偃月斩：出城决战敌阵，造成 600 点高额劈砍与巨额击退", atk: 220, rate: 1.1, hp: 1200, maxHp: 1200, type: "melee", color: "#10b981" },
-                { id: 'zhangfei', name: "张飞", title: "燕人", icon: "🐍", role: "⚔️ 近战猛将", desc: "丈八咆哮：出城杀敌，对城前敌军造成 400 点怒吼大范围击退", atk: 180, rate: 1.0, hp: 1100, maxHp: 1100, type: "melee", color: "#f59e0b" },
-                { id: 'zhaoyun', name: "赵云", title: "常胜将军", icon: "🐉", role: "⚔️ 近战猛将", desc: "七进七出：出城极速龙枪，穿透杀伤敌军", atk: 150, rate: 0.6, hp: 1000, maxHp: 1000, type: "melee", color: "#38bdf8" },
-                { id: 'lvbu_p', name: "吕布", title: "无双飞将", icon: "🪓", role: "⚔️ 近战猛将", desc: "方天画戟：出城狂暴乱舞，横扫城下成群敌军", atk: 280, rate: 1.2, hp: 1500, maxHp: 1500, type: "melee", color: "#ef4444" },
-                { id: 'dianwei', name: "典韦", title: "古之恶来", icon: "🪓", role: "⚔️ 近战猛将", desc: "双斧狂暴：出城死守城门，反击极高伤害", atk: 210, rate: 0.85, hp: 1400, maxHp: 1400, type: "melee", color: "#a855f7" },
-                { id: 'xuchu', name: "许褚", title: "虎痴", icon: "🔨", role: "⚔️ 近战猛将", desc: "虎痴重锤：出城砸击地面造成群体晕眩震波", atk: 240, rate: 1.3, hp: 1300, maxHp: 1300, type: "melee", color: "#d97706" }
+                { id: 'guanyu', name: "关羽", title: "武圣", icon: "🗡️", role: "⚔️ 近战猛将", desc: "青龙偃月斩：出城决战敌阵，造成 600 点高额劈砍与巨额击退", atk: 220, rate: 1.1, range: 65, hp: 1200, maxHp: 1200, type: "melee", color: "#10b981" },
+                { id: 'zhangfei', name: "张飞", title: "燕人", icon: "🐍", role: "⚔️ 近战猛将", desc: "丈八咆哮：出城杀敌，对城前敌军造成 400 点怒吼大范围击退", atk: 180, rate: 1.0, range: 60, hp: 1100, maxHp: 1100, type: "melee", color: "#f59e0b" },
+                { id: 'zhaoyun', name: "赵云", title: "常胜将军", icon: "🐉", role: "⚔️ 近战猛将", desc: "七进七出：出城极速龙枪，穿透杀伤敌军", atk: 150, rate: 0.6, range: 60, hp: 1000, maxHp: 1000, type: "melee", color: "#38bdf8" },
+                { id: 'lvbu_p', name: "吕布", title: "无双飞将", icon: "🪓", role: "⚔️ 近战猛将", desc: "方天画戟：出城狂暴乱舞，横扫城下成群敌军", atk: 280, rate: 1.2, range: 70, hp: 1500, maxHp: 1500, type: "melee", color: "#ef4444" },
+                { id: 'dianwei', name: "典韦", title: "古之恶来", icon: "🪓", role: "⚔️ 近战猛将", desc: "双斧狂暴：出城死守城门，反击极高伤害", atk: 210, rate: 0.85, range: 60, hp: 1400, maxHp: 1400, type: "melee", color: "#a855f7" },
+                { id: 'xuchu', name: "许褚", title: "虎痴", icon: "🔨", role: "⚔️ 近战猛将", desc: "虎痴重锤：出城砸击地面造成群体晕眩震波", atk: 240, rate: 1.3, range: 65, hp: 1300, maxHp: 1300, type: "melee", color: "#d97706" }
             ],
             archer: [
-                { id: 'huangzhong', name: "黄忠", title: "老当益壮", icon: "🏹", role: "🏹 远程神射", desc: "百步穿杨：城墙连环穿透飞箭，狙杀远处敌军", atk: 170, rate: 0.8, hp: 800, maxHp: 800, type: "archer", color: "#f59e0b" },
-                { id: 'taishici', name: "太史慈", title: "弦无虚发", icon: "🏹", role: "🏹 远程神射", desc: "双弓怒射：同时射出双重破甲强箭", atk: 150, rate: 0.7, hp: 750, maxHp: 750, type: "archer", color: "#10b981" },
-                { id: 'zhugeliang', name: "诸葛亮", title: "卧龙", icon: "🪶", role: "⚡ 元素雷法", desc: "八阵天雷：九天狂雷轰击全场敌军 [雷雨天双倍爆发伤害与超巨攻速]", atk: 240, rate: 1.8, hp: 900, maxHp: 900, type: "archer", isAoE: true, isLightning: true, color: "#a855f7" },
-                { id: 'zhangjiao_p', name: "张角", title: "天公将军", icon: "⚡", role: "⚡ 元素雷法", desc: "天公引雷：召唤九霄连锁闪电撕裂敌阵 [雷雨/雨天攻击力暴涨]", atk: 220, rate: 1.6, hp: 850, maxHp: 850, type: "archer", isAoE: true, isLightning: true, color: "#38bdf8" },
-                { id: 'zhouyu', name: "周瑜", title: "美周郎", icon: "🔥", role: "🔥 赤壁火法", desc: "赤壁烈焰：抛射天火火海成片烧灼并减速敌军 [顺风天火海狂增]", atk: 200, rate: 1.6, hp: 850, maxHp: 850, type: "archer", isAoE: true, color: "#f97316" },
-                { id: 'pangtong', name: "庞统", title: "凤雏", icon: "☄️", role: "☄️ 奇谋星陨", desc: "连环巧计：陨星坠击，大范围爆裂伤害", atk: 220, rate: 2.0, hp: 800, maxHp: 800, type: "archer", isAoE: true, color: "#ec4899" }
+                { id: 'huangzhong', name: "黄忠", title: "老当益壮", icon: "🏹", role: "🏹 远程神射", desc: "百步穿杨：城墙连环穿透飞箭，狙杀远处敌军", atk: 170, rate: 0.8, range: 250, hp: 800, maxHp: 800, type: "archer", color: "#f59e0b" },
+                { id: 'taishici', name: "太史慈", title: "弦无虚发", icon: "🏹", role: "🏹 远程神射", desc: "双弓怒射：同时射出双重破甲强箭", atk: 150, rate: 0.7, range: 230, hp: 750, maxHp: 750, type: "archer", color: "#10b981" },
+                { id: 'zhugeliang', name: "诸葛亮", title: "卧龙", icon: "🪶", role: "⚡ 元素雷法", desc: "八阵天雷：九天狂雷轰击全场敌军 [雷雨天双倍爆发伤害与超巨攻速]", atk: 240, rate: 1.8, range: 280, hp: 900, maxHp: 900, type: "archer", isAoE: true, isLightning: true, color: "#a855f7" },
+                { id: 'zhangjiao_p', name: "张角", title: "天公将军", icon: "⚡", role: "⚡ 元素雷法", desc: "天公引雷：召唤九霄连锁闪电撕裂敌阵 [雷雨/雨天攻击力暴涨]", atk: 220, rate: 1.6, range: 260, hp: 850, maxHp: 850, type: "archer", isAoE: true, isLightning: true, color: "#38bdf8" },
+                { id: 'zhouyu', name: "周瑜", title: "美周郎", icon: "🔥", role: "🔥 赤壁火法", desc: "赤壁烈焰：抛射天火火海成片烧灼并减速敌军 [顺风天火海狂增]", atk: 200, rate: 1.6, range: 240, hp: 850, maxHp: 850, type: "archer", isAoE: true, color: "#f97316" },
+                { id: 'pangtong', name: "庞统", title: "凤雏", icon: "☄️", role: "☄️ 奇谋星陨", desc: "连环巧计：陨星坠击，大范围爆裂伤害", atk: 220, rate: 2.0, range: 240, hp: 800, maxHp: 800, type: "archer", isAoE: true, color: "#ec4899" }
             ],
             repair: [
-                { id: 'huangyueying', name: "黄月英", title: "墨家巧圣", icon: "⚙️", role: "🛠️ 机关修补", desc: "木牛流马·机巧修葺：每 2.8 秒释放修城波，修复城墙 180 HP、箭塔拒马 90 HP，并提升城防 15% 护甲耐久！", atk: 120, rate: 2.8, hp: 880, maxHp: 880, type: "repair", repairWallHp: 180, repairDefenseHp: 90, color: "#eab308" },
-                { id: 'luban', name: "鲁班", title: "天工工圣", icon: "📐", role: "🛠️ 机关修补", desc: "天工开物·神级修固：每 2.4 秒为城墙修复 240 HP，快速修复受损箭塔，并构建护城加固力场！", atk: 130, rate: 2.4, hp: 920, maxHp: 920, type: "repair", repairWallHp: 240, repairDefenseHp: 120, color: "#f59e0b" },
-                { id: 'majun', name: "马钧", title: "神机工部", icon: "🛠️", role: "🛠️ 机关修补", desc: "百戏神机·器械改良：持续维修守城器械，并使全场投石车与床弩射速提升 35%！", atk: 110, rate: 2.5, hp: 850, maxHp: 850, type: "repair", repairWallHp: 150, repairDefenseHp: 100, color: "#fb923c" }
+                { id: 'huangyueying', name: "黄月英", title: "墨家巧圣", icon: "⚙️", role: "🛠️ 机关修补", desc: "木牛流马·机巧修葺：每 2.8 秒释放修城波，修复城墙 180 HP、箭塔拒马 90 HP，并提升城防 15% 护甲耐久！", atk: 120, rate: 2.8, range: 180, hp: 880, maxHp: 880, type: "repair", repairWallHp: 180, repairDefenseHp: 90, color: "#eab308" },
+                { id: 'luban', name: "鲁班", title: "天工工圣", icon: "📐", role: "🛠️ 机关修补", desc: "天工开物·神级修固：每 2.4 秒为城墙修复 240 HP，快速修复受损箭塔，并构建护城加固力场！", atk: 130, rate: 2.4, range: 180, hp: 920, maxHp: 920, type: "repair", repairWallHp: 240, repairDefenseHp: 120, color: "#f59e0b" },
+                { id: 'majun', name: "马钧", title: "神机工部", icon: "🛠️", role: "🛠️ 机关修补", desc: "百戏神机·器械改良：持续维修守城器械，并使全场投石车与床弩射速提升 35%！", atk: 110, rate: 2.5, range: 180, hp: 850, maxHp: 850, type: "repair", repairWallHp: 150, repairDefenseHp: 100, color: "#fb923c" }
             ],
             support: [
-                { id: 'liubei', name: "刘备", title: "昭烈帝", icon: "👑", role: "✨ 增益主将", desc: "昭烈仁德·全军光环：仁德光环笼罩全城，使全体守军与箭塔攻击力+35%、攻速+25%，每秒恢复 25 生命！", atk: 130, rate: 2.0, hp: 1100, maxHp: 1100, type: "support", buffType: "allyBoost", color: "#34d399" },
-                { id: 'caocao', name: "曹操", title: "魏武帝", icon: "🗡️", role: "✨ 增益主将", desc: "魏武挥鞭·短歌行：全军激昂狂暴，全体武将暴击率+40%，出手速度与弹速大幅跃升！", atk: 140, rate: 2.0, hp: 1150, maxHp: 1150, type: "support", buffType: "critSpeed", color: "#60a5fa" },
-                { id: 'guojia', name: "郭嘉", title: "鬼谋神策", icon: "🔮", role: "🔮 减益谋士", desc: "十胜十败·敌军削弱：使全场敌军攻击力降低 30%，行军速度降低 25%，并周期性使敌军陷入混乱自残！", atk: 150, rate: 2.2, hp: 820, maxHp: 820, type: "support", debuffType: "weakenSlow", color: "#a78bfa" },
-                { id: 'simayi', name: "司马懿", title: "鹰视狼顾", icon: "🦅", role: "🔮 减益/雷法", desc: "雷蚀冥域·破甲易伤：使敌军承受伤害提升 50%(易伤)，雷雨天气引下九幽阴雷轰击敌军！", atk: 180, rate: 2.0, hp: 880, maxHp: 880, type: "support", isLightning: true, debuffType: "vulnerability", color: "#818cf8" },
-                { id: 'jiaxu', name: "贾诩", title: "毒士绝策", icon: "🧪", role: "🔮 减益谋士", desc: "算无遗策·剧毒连环：全屏敌军持续受到剧毒侵蚀腐蚀，敌军被击杀时发生毒爆造成连环伤害！", atk: 160, rate: 2.2, hp: 800, maxHp: 800, type: "support", debuffType: "poisonBlast", color: "#2dd4bf" }
+                { id: 'liubei', name: "刘备", title: "昭烈帝", icon: "👑", role: "✨ 增益主将", desc: "昭烈仁德·全军光环：仁德光环笼罩全城，使全体守军与箭塔攻击力+35%、攻速+25%，每秒恢复 25 生命！", atk: 130, rate: 2.0, range: 200, hp: 1100, maxHp: 1100, type: "support", buffType: "allyBoost", color: "#34d399" },
+                { id: 'caocao', name: "曹操", title: "魏武帝", icon: "🗡️", role: "✨ 增益主将", desc: "魏武挥鞭·短歌行：全军激昂狂暴，全体武将暴击率+40%，出手速度与弹速大幅跃升！", atk: 140, rate: 2.0, range: 200, hp: 1150, maxHp: 1150, type: "support", buffType: "critSpeed", color: "#60a5fa" },
+                { id: 'guojia', name: "郭嘉", title: "鬼谋神策", icon: "🔮", role: "🔮 减益谋士", desc: "十胜十败·敌军削弱：使全场敌军攻击力降低 30%，行军速度降低 25%，并周期性使敌军陷入混乱自残！", atk: 150, rate: 2.2, range: 200, hp: 820, maxHp: 820, type: "support", debuffType: "weakenSlow", color: "#a78bfa" },
+                { id: 'simayi', name: "司马懿", title: "鹰视狼顾", icon: "🦅", role: "🔮 减益/雷法", desc: "雷蚀冥域·破甲易伤：使敌军承受伤害提升 50%(易伤)，雷雨天气引下九幽阴雷轰击敌军！", atk: 180, rate: 2.0, range: 220, hp: 880, maxHp: 880, type: "support", isLightning: true, debuffType: "vulnerability", color: "#818cf8" },
+                { id: 'jiaxu', name: "贾诩", title: "毒士绝策", icon: "🧪", role: "🔮 减益谋士", desc: "算无遗策·剧毒连环：全屏敌军持续受到剧毒侵蚀腐蚀，敌军被击杀时发生毒爆造成连环伤害！", atk: 160, rate: 2.2, range: 200, hp: 800, maxHp: 800, type: "support", debuffType: "poisonBlast", color: "#2dd4bf" }
             ]
         };
 
@@ -1121,12 +1205,20 @@
                 maxHp: 10000
             },
 
-            // 17 种可建造、升级与科技研习项目 (树状结构，大类开局直接可升级)
+            // 树状军事科技树体系 (🛠️机关修复, 🛡️铠甲城防, 🏹远射弓弩, 💥攻城器械, 👑武将军略)
             defenses: {
+                // === 🛠️ 机关修复分支 (全新独立大类) ===
+                repairSystem: { id: 'repairSystem', name: '🛠️ 墨家机关修葺', level: 1, maxLevel: 5, icon: '🛠️', prereq: null, branch: 'repair' },
+                emergencyRepair: { id: 'emergencyRepair', name: '🚨 机关紧急抢修', level: 1, maxLevel: 5, healAmount: 2500, icon: '🚨', prereq: 'repairSystem', branch: 'repair' },
+                engineerCrew: { id: 'engineerCrew', name: '👷 墨家工兵机动连', level: 0, maxLevel: 5, icon: '👷', prereq: 'emergencyRepair', branch: 'repair' },
+                towerRestoration: { id: 'towerRestoration', name: '🏹 守城器械自动维保', level: 0, maxLevel: 5, icon: '🏹', prereq: 'repairSystem', branch: 'repair' },
+                trapResetMech: { id: 'trapResetMech', name: '🪵 机关陷阱机簧自填装', level: 0, maxLevel: 5, icon: '🪵', prereq: 'towerRestoration', branch: 'repair' },
+                structureReinforce: { id: 'structureReinforce', name: '🧱 榫卯机括城防加固', level: 0, maxLevel: 5, icon: '🧱', prereq: 'repairSystem', branch: 'repair' },
+                gearShield: { id: 'gearShield', name: '🛡️ 机关金刚护盾力场', level: 0, maxLevel: 5, maxShield: 0, currentShield: 0, cd: 30, timer: 0, icon: '🛡️', prereq: 'structureReinforce', branch: 'repair' },
+
                 // === 🛡️ 城堡与铠甲分支 ===
                 armor1: { id: 'armor1', name: '🛡️ 基础加固铠甲', level: 0, maxLevel: 3, icon: '🛡️', prereq: null, branch: 'armor' },
                 armor2: { id: 'armor2', name: '🦾 精钢重型锁子甲', level: 0, maxLevel: 3, icon: '🦾', prereq: 'armor1', branch: 'armor' },
-                repairSystem: { id: 'repairSystem', name: '🛠️ 墨家机关修葺', level: 0, maxLevel: 5, icon: '🛠️', prereq: 'armor1', branch: 'armor' },
                 bullhideNet: { id: 'bullhideNet', name: '🐂 巨型牛皮反弹网', level: 0, maxLevel: 5, icon: '🐂', prereq: 'armor2', branch: 'armor' },
                 moat: { id: 'moat', name: '🌊 护城河工程', level: 1, maxLevel: 5, slowPct: 0.55, dps: 15, icon: '🌊', prereq: null, branch: 'armor' },
                 chevalDeFrise: { id: 'chevalDeFrise', name: '🚧 尖刺拒马阵', level: 0, maxLevel: 4, hp: 0, maxHp: 1000, atk: 45, icon: '🚧', prereq: 'moat', branch: 'armor' },
@@ -1137,9 +1229,9 @@
                 repeatingCrossbow: { id: 'repeatingCrossbow', name: '🎯 诸葛连弩机关车', level: 0, maxLevel: 5, atk: 48, rate: 1.6, timer: 0, burstTimer: 0, remainingBurst: 0, icon: '🎯⚙️', prereq: 'crossbow', branch: 'archery' },
                 wallArchers: { id: 'wallArchers', name: '🏹💂 精锐长弓手', level: 0, maxLevel: 5, count: 0, hp: 0, maxHp: 0, atk: 28, rate: 1.0, timer: 0, icon: '🏹💂', prereq: 'crossbow', branch: 'archery' },
                 volleyFire: { id: 'volleyFire', name: '🔥 万箭齐发与火箭', level: 0, maxLevel: 5, icon: '🔥', prereq: 'wallArchers', branch: 'archery' },
-                leftTower: { id: 'leftTower', name: '🏹 左翼防空箭塔', level: 0, maxLevel: 5, hp: 0, maxHp: 750, atk: 55, rate: 0.85, timer: 0, range: 145, x: 40, y: 285, icon: '🏰', prereq: null, branch: 'archery' },
-                centerTower: { id: 'centerTower', name: '🏹 主堡中央箭塔', level: 0, maxLevel: 5, hp: 0, maxHp: 1000, atk: 75, rate: 0.75, timer: 0, range: 160, x: 160, y: 280, icon: '🏰', prereq: null, branch: 'archery' },
-                rightTower: { id: 'rightTower', name: '🏹 右翼碉堡箭塔', level: 0, maxLevel: 5, hp: 0, maxHp: 750, atk: 55, rate: 0.85, timer: 0, range: 145, x: 280, y: 285, icon: '🏰', prereq: null, branch: 'archery' },
+                leftTower: { id: 'leftTower', name: '🏹 左翼防空箭塔', level: 0, maxLevel: 5, hp: 0, maxHp: 750, atk: 55, rate: 0.85, timer: 0, range: 150, x: 40, y: 285, icon: '🏰', prereq: null, branch: 'archery' },
+                centerTower: { id: 'centerTower', name: '🏹 主堡中央箭塔', level: 0, maxLevel: 5, hp: 0, maxHp: 1000, atk: 75, rate: 0.75, timer: 0, range: 175, x: 160, y: 280, icon: '🏰', prereq: null, branch: 'archery' },
+                rightTower: { id: 'rightTower', name: '🏹 右翼碉堡箭塔', level: 0, maxLevel: 5, hp: 0, maxHp: 750, atk: 55, rate: 0.85, timer: 0, range: 150, x: 280, y: 285, icon: '🏰', prereq: null, branch: 'archery' },
 
                 // === 💥 攻城与机关分支 ===
                 traps: { id: 'traps', name: '⚙️ 机关工程学', level: 0, maxLevel: 3, icon: '⚙️', prereq: null, branch: 'siege' },
@@ -1148,7 +1240,7 @@
                 rollingLog: { id: 'rollingLog', name: '🪵 巨型带刺滚木', level: 0, maxLevel: 3, charges: 0, icon: '🪵', prereq: 'traps', branch: 'siege' },
                 catapult: { id: 'catapult', name: '🪨 烈焰巨石投石机', level: 0, maxLevel: 5, atk: 160, rate: 3.0, timer: 0, icon: '🪨', prereq: 'traps', branch: 'siege' },
                 napalmBoulder: { id: 'napalmBoulder', name: '🔥 炽热硫磺燃烧弹', level: 0, maxLevel: 5, icon: '🔥', prereq: 'catapult', branch: 'siege' },
-                ballista: { id: 'ballista', name: '🎯 灭世连发床弩', level: 0, maxLevel: 5, atk: 280, rate: 2.6, timer: 0, icon: '🎯', prereq: 'catapult', branch: 'siege' },
+                ballista: { id: 'ballista', name: '🎯 灭世穿透重弩', level: 0, maxLevel: 5, atk: 550, rate: 4.5, timer: 0, icon: '🎯', prereq: 'catapult', branch: 'siege' },
 
                 // === 👑 武将与军略分支 ===
                 heroAtk: { id: 'heroAtk', name: '⚔️ 三军名将勇武', level: 0, maxLevel: 5, icon: '⚔️', prereq: null, branch: 'heroTech' },
@@ -1172,8 +1264,97 @@
             totalKills: 0,
             gameTime: 0,
 
+            // ⏱️ 背诵时间 / 战斗时间 交替循环系统
+            phase: 'study',          // 'study' (背诵整备时间) 或 'battle' (全军交战时间)
+            phaseTimer: 20,          // 当前阶段剩余秒数
+            studyDuration: 20,       // 背诵时间每轮20秒
+            battleDuration: 20,      // 战斗时间每轮20秒
+
             winner: null
         };
+
+        // ⏱️ 阶段切换：20秒背诵整备 / 20秒全军交战 循环
+        function startStudyPhase() {
+            tdState.phase = 'study';
+            tdState.phaseTimer = tdState.studyDuration;
+            
+            const layout = document.getElementById('layoutWrapper');
+            if (layout) {
+                layout.classList.remove('battle-maximized');
+            }
+            setupCanvasDimensions();
+
+            addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, "📖 背诵时间 (20s) - 休整备战！", "#38bdf8");
+            addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#38bdf8", 15);
+            updatePhaseUI();
+        }
+
+        function startBattlePhase() {
+            tdState.phase = 'battle';
+            tdState.phaseTimer = tdState.battleDuration;
+            cycleWeather(); // 🌦️ 每回合更替天气变化 (晴、烈日、雷雨、雨天、顺风、逆风)
+
+            const layout = document.getElementById('layoutWrapper');
+            if (layout) {
+                layout.classList.add('battle-maximized');
+            }
+            setupCanvasDimensions();
+
+            addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 40, "⚔️ 战斗时间 (20s) - 全军交锋！", "#ef4444");
+            addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 20, "#ef4444", 25);
+            updatePhaseUI();
+        }
+
+        function togglePhaseManually() {
+            if (tdState.phase === 'study') {
+                startBattlePhase();
+            } else {
+                startStudyPhase();
+            }
+        }
+
+        function updatePhaseUI() {
+            const badge = document.getElementById('phaseBadge');
+            const lockBanner = document.getElementById('battleLockBanner');
+            const battleRemainSec = document.getElementById('battleRemainSec');
+            const isStudy = tdState.phase === 'study';
+            const remain = Math.max(0, Math.ceil(tdState.phaseTimer));
+
+            if (battleRemainSec) {
+                battleRemainSec.innerText = remain;
+            }
+
+            if (badge) {
+                if (isStudy) {
+                    badge.style.color = '#38bdf8';
+                    badge.style.borderColor = '#38bdf8';
+                    badge.style.background = '#0c4a6e';
+                    badge.innerHTML = `📖 背诵 ${remain}s <span style="font-size:0.65rem; opacity:0.8; margin-left:2px;">➔开战</span>`;
+                    badge.title = "当前为【背诵时间 (20s)】：战场休整暂停，专心背词积累点数！点击可立即开战";
+                } else {
+                    badge.style.color = '#fca5a5';
+                    badge.style.borderColor = '#ef4444';
+                    badge.style.background = '#450a0a';
+                    badge.innerHTML = `⚔️ 战斗 ${remain}s <span style="font-size:0.65rem; opacity:0.8; margin-left:2px;">➔背诵</span>`;
+                    badge.title = "当前为【战斗时间 (20s)】：全军激烈交锋中！点击可立即休整背诵";
+                }
+            }
+
+            if (lockBanner) {
+                lockBanner.style.display = isStudy ? 'none' : 'block';
+            }
+
+            const layout = document.getElementById('layoutWrapper');
+            if (layout) {
+                if (isStudy && layout.classList.contains('battle-maximized')) {
+                    layout.classList.remove('battle-maximized');
+                    setupCanvasDimensions();
+                } else if (!isStudy && !layout.classList.contains('battle-maximized')) {
+                    layout.classList.add('battle-maximized');
+                    setupCanvasDimensions();
+                }
+            }
+        }
 
         // 暂停/继续战局切换
         function togglePauseGame() {
@@ -1280,11 +1461,7 @@
             }
 
             // 实例化玩家三国英雄
-            // 近战猛将出城迎敌 (y = castle.y - 48)，其余在城墙上各阵位 (y = castle.y + 36)
             const isMelee = chosen.type === 'melee';
-            const heroCount = tdState.playerHeroes.length;
-            const heroX = tdState.castle.x + 35 + (heroCount * 45) % (tdState.castle.width - 70);
-            const heroY = isMelee ? (tdState.castle.y - 48) : (tdState.castle.y + 36);
 
             const hero = {
                 id: Math.random().toString(36).substr(2, 9),
@@ -1294,14 +1471,14 @@
                 icon: chosen.icon,
                 type: chosen.type,
                 role: chosen.role,
-                x: heroX,
-                y: heroY,
+                x: tdState.castle.x + tdState.castle.width / 2,
+                y: isMelee ? (tdState.castle.y - 48) : (tdState.castle.y + 20),
                 hp: chosen.hp,
                 maxHp: chosen.maxHp,
                 atk: chosen.atk,
                 rate: chosen.rate,
                 timer: 0,
-                range: chosen.type === 'archer' ? 175 : (isMelee ? 55 : 120),
+                range: chosen.range || (chosen.type === 'archer' ? 240 : (isMelee ? 65 : 180)),
                 isAoE: chosen.isAoE || false,
                 isLightning: chosen.isLightning || false,
                 repairWallHp: chosen.repairWallHp || 0,
@@ -1315,6 +1492,7 @@
             };
 
             tdState.playerHeroes.push(hero);
+            recalculateHeroPositions();
 
             if (isMelee) {
                 addFloatingText(hero.x, hero.y - 15, `⚔️ 猛将[${chosen.name}]出城接敌决战！`, "#f97316");
@@ -1349,14 +1527,9 @@
                 tdState.wordsProgress %= 5;
                 tdState.buildPoints += earnedPoints;
 
-                // 获得建造点飘字与特效
+                // 获得建造点飘字与特效 (不再自动弹出升级弹窗，由玩家自主在适当时机点击升级)
                 addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🎉 背完5词! 获得${earnedPoints}点科技/建造点!`, "#fde047");
                 addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#fde047", 20);
-
-                // 自动弹出升级建造界面
-                setTimeout(() => {
-                    openBuildModal();
-                }, 300);
             }
 
             // 2. 每复习 30 个单词召唤三国神将
@@ -1387,10 +1560,18 @@
         }
 
         const techNodes = [
+            // === 🛠️ 机关修复分支 (全新独立大类) ===
+            { key: 'repairSystem', name: '🛠️ 墨家机关修葺', branch: 'repair', prereq: null, prereqName: null, desc: '墨家自动化工程修葺核心！城墙每秒持续自动修缮 25~150 HP/s，也是全城机关维保体系的总枢纽。' },
+            { key: 'emergencyRepair', name: '🚨 机关紧急抢修', branch: 'repair', prereq: 'repairSystem', prereqName: '墨家机关修葺', desc: '墨家应急抢修机括！研习提升单次恢复量 (+2500/+3800/+5200/+6800/+8500 HP) 并赋予城墙 6 秒金刚防护盾（减伤 40%~75%）。在此既可研习升级，也可随时一键启动快速抢修！' },
+            { key: 'engineerCrew', name: '👷 墨家工兵机动连', branch: 'repair', prereq: 'emergencyRepair', prereqName: '机关紧急抢修', desc: '精选工兵队伍进驻城防！全城所有自动与紧急修复效率提升 +35%~175%，并在城墙危急时向城下投掷阻滞烟幕弹降低敌军攻速与命中率！' },
+            { key: 'towerRestoration', name: '🏹 守城器械自动维保', branch: 'repair', prereq: 'repairSystem', prereqName: '墨家机关修葺', desc: '专司左/中/右箭塔、诸葛连弩车与拒马！器械受损每秒自愈 35~180 HP/s；若器械损毁，维保机关将在 15~6 秒后自动重装并满血复活！' },
+            { key: 'trapResetMech', name: '🪵 机关陷阱机簧自填装', branch: 'repair', prereq: 'towerRestoration', prereqName: '守城器械自动维保', desc: '地下机簧联动系统！战斗中已消耗的巨型滚木、金汁热油每 40~15 秒自动重填一次储备；损毁的隐蔽尖刺陷坑阵每秒自动修复耐久并自愈复原！' },
+            { key: 'structureReinforce', name: '🧱 榫卯机括城防加固', branch: 'repair', prereq: 'repairSystem', prereqName: '墨家机关修葺', desc: '墨家榫卯咬合深层加固！城墙最大生命上限大幅跃升 (+2500/+5500/+9000/+13000/+18000 HP)，并永久使城防整体受到的一切伤害额外减少 10%~30%！' },
+            { key: 'gearShield', name: '🛡️ 机关金刚护盾力场', branch: 'repair', prereq: 'structureReinforce', prereqName: '榫卯机括城防加固', desc: '墨家动力金刚力场罩！每 35/30/25/20/15 秒自动在城墙前方凝聚一层吸收 2000~6000 伤害的防护金刚光盾，优先抵挡敌军致命爆破与冲锋！' },
+
             // === 🛡️ 城堡与铠甲分支 ===
             { key: 'armor1', name: '🛡️ 基础加固铠甲', branch: 'armor', prereq: null, prereqName: null, desc: '增强全军与城墙基础护甲！提升城墙上限 +1500，且城墙与所有友军受到伤害 -10%。' },
             { key: 'armor2', name: '🦾 精钢重型锁子甲', branch: 'armor', prereq: 'armor1', prereqName: '基础加固铠甲', desc: '打制精钢连环锁子甲！城墙上限 +2500，全员减伤效果额外再提升 +10%！' },
-            { key: 'repairSystem', name: '🛠️ 墨家机关修葺', branch: 'armor', prereq: 'armor1', prereqName: '基础加固铠甲', desc: '墨家自动化工程修葺术！每秒自动修缮城墙与受损箭塔/拒马（每级修复 +25~125 HP/s），坚不可摧！' },
             { key: 'bullhideNet', name: '🐂 巨型牛皮反弹网', branch: 'armor', prereq: 'armor2', prereqName: '精钢重型锁子甲', desc: '在城墙前拉起绷紧的巨型牛皮反弹张力网！面对敌方投石车与巨石轰炸，有 35%~95% 概率完全反弹巨石砸向敌群，并完全免伤！' },
             { key: 'moat', name: '🌊 护城河工程', branch: 'armor', prereq: null, prereqName: null, desc: '开局即拥有的急流护城河！大量减速敌兵并造成微量伤害，永不坍塌。敌军必须渡过护城河方可对我方城防近战！升级可显著加宽护城河！' },
             { key: 'chevalDeFrise', name: '🚧 尖刺拒马阵', branch: 'armor', prereq: 'moat', prereqName: '护城河工程', desc: '在护城河前架设密集的反伤尖刺拒马，强行拦截敌兵前进并反弹大量刺伤。' },
@@ -1412,7 +1593,7 @@
             { key: 'rollingLog', name: '🪵 巨型带刺滚木', branch: 'siege', prereq: 'traps', prereqName: '机关工程学', desc: '带刺巨型滚木！作动后顺着战场一路碾压全屏所有地面陆军敌兵！' },
             { key: 'catapult', name: '🪨 烈焰巨石投石机', branch: 'siege', prereq: 'traps', prereqName: '机关工程学', desc: '城墙高台重型投石机，发射轰鸣烈焰巨石造成大范围爆裂伤。' },
             { key: 'napalmBoulder', name: '🔥 炽热硫磺燃烧弹', branch: 'siege', prereq: 'catapult', prereqName: '烈焰巨石投石机', desc: '投石机弹药升级！巨石落地后爆炸引燃持续 3.5~8.5 秒的炽热硫磺火海，持续焚烧通过敌军！' },
-            { key: 'ballista', name: '🎯 灭世连发床弩', branch: 'siege', prereq: 'catapult', prereqName: '烈焰巨石投石机', desc: '架设重型连发床弩，发射粗钢箭穿透整排重装攻城兵与敌方巨兽！' },
+            { key: 'ballista', name: '🎯 灭世穿透重弩', branch: 'siege', prereq: 'catapult', prereqName: '烈焰巨石投石机', desc: '架设重型贯穿床弩！极速出膛、极高单体与贯穿伤害（蓄力时间长）。升级后可同时发射至多 3 根扇形贯穿重箭，贯通战场整行敌军！' },
 
             // === 👑 武将与军略分支 ===
             { key: 'heroAtk', name: '⚔️ 三军名将勇武', branch: 'heroTech', prereq: null, prereqName: null, desc: '兵威将勇！提升我方全体三国神将的基础技能与斩杀攻击力（每级 +20% 伤害）。' },
@@ -1427,7 +1608,7 @@
             currentTechBranchFilter = branch;
             
             // 更新按钮高亮样式
-            const btnIds = ['all', 'armor', 'archery', 'siege', 'heroTech'];
+            const btnIds = ['all', 'repair', 'armor', 'archery', 'siege', 'heroTech'];
             btnIds.forEach(id => {
                 const btn = document.getElementById(`tabBtn-${id}`);
                 if (btn) {
@@ -1436,7 +1617,7 @@
                         btn.style.color = 'white';
                     } else {
                         btn.style.background = '#1e293b';
-                        btn.style.color = id === 'armor' ? '#38bdf8' : (id === 'archery' ? '#fde047' : (id === 'siege' ? '#f97316' : (id === 'heroTech' ? '#a855f7' : '#cbd5e1')));
+                        btn.style.color = id === 'repair' ? '#10b981' : (id === 'armor' ? '#38bdf8' : (id === 'archery' ? '#fde047' : (id === 'siege' ? '#f97316' : (id === 'heroTech' ? '#a855f7' : '#cbd5e1'))));
                     }
                 }
             });
@@ -1465,6 +1646,32 @@
             }
         }
 
+        // 立即执行紧急修补 (消耗1点科技点立即抢修城墙)
+        function triggerEmergencyRepairNow() {
+            if (tdState.buildPoints <= 0) return;
+            if (tdState.castle.hp >= tdState.castle.maxHp) {
+                addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 20, "✨ 城墙完好无损，无需抢修！", "#10b981");
+                return;
+            }
+            tdState.buildPoints--;
+
+            const def = tdState.defenses.emergencyRepair || { level: 1 };
+            const engineerLvl = tdState.defenses.engineerCrew ? tdState.defenses.engineerCrew.level : 0;
+            const engineerMult = 1.0 + engineerLvl * 0.35;
+            const healBase = 2500 + (def.level - 1) * 1300;
+            const actualHeal = Math.round(healBase * engineerMult);
+
+            tdState.castle.hp = Math.min(tdState.castle.maxHp, tdState.castle.hp + actualHeal);
+            tdState.castleShieldTimer = 6.0; // 6秒金刚防护盾
+
+            addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 20, `🚨 机关紧急抢修 +${actualHeal} HP! (获得6秒金刚防护盾)`, "#10b981");
+            addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y, "#10b981", 25);
+            addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y, "#fde047", 15);
+
+            renderTechTreeModal();
+            updateBattleUI();
+        }
+
         // 渲染树状科技树弹窗
         function renderTechTreeModal() {
             const badge = document.getElementById('modalPointsBadge');
@@ -1474,9 +1681,10 @@
             if (!listEl) return;
 
             const branchDefs = [
-                { id: 'armor', title: '🛡️ 城堡与铠甲分支', color: '#38bdf8', items: ['armor1', 'armor2', 'repairSystem', 'bullhideNet', 'moat', 'chevalDeFrise'] },
+                { id: 'repair', title: '🛠️ 机关修复分支 (大类·核心科技)', color: '#10b981', items: ['repairSystem', 'emergencyRepair', 'engineerCrew', 'towerRestoration', 'trapResetMech', 'structureReinforce', 'gearShield'] },
+                { id: 'armor', title: '🛡️ 城堡与铠甲分支', color: '#38bdf8', items: ['armor1', 'armor2', 'bullhideNet', 'moat', 'chevalDeFrise'] },
                 { id: 'archery', title: '🏹 远射与弓弩分支', color: '#fde047', items: ['archery', 'leftTower', 'centerTower', 'rightTower', 'crossbow', 'repeatingCrossbow', 'wallArchers', 'volleyFire'] },
-                { id: 'siege', title: '💥 攻城与机关分支', color: '#f97316', items: ['traps', 'pitfall', 'boilingOil', 'rollingLog', 'catapult', 'napalmBoulder', 'ballista'] },
+                { id: 'siege', title: '💥 攻城与器械分支', color: '#f97316', items: ['traps', 'pitfall', 'boilingOil', 'rollingLog', 'catapult', 'napalmBoulder', 'ballista'] },
                 { id: 'heroTech', title: '👑 武将与军略分支', color: '#a855f7', items: ['heroAtk', 'heroCd', 'heroLifesteal', 'heroMastery'] }
             ];
 
@@ -1534,20 +1742,41 @@
                         ? '🔒 前置未达成' 
                         : (item.level === 0 ? '⚡ 解锁研习 (1点)' : (isMax ? '✓ 已极顶' : '⚡ 研习升级 (1点)'));
 
+                    // 针对紧急修补项，增加立即抢修快捷动作
+                    let extraActionHtml = '';
+                    if (key === 'emergencyRepair' && prereqMet) {
+                        const canQuickRepair = tdState.buildPoints > 0 && tdState.castle.hp < tdState.castle.maxHp;
+                        const healEst = Math.round((2500 + (item.level - 1) * 1300) * (1.0 + (tdState.defenses.engineerCrew ? tdState.defenses.engineerCrew.level * 0.35 : 0)));
+                        extraActionHtml = `
+                            <div style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed #334155; display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+                                <div style="font-size: 0.78rem; color: #10b981;">
+                                    🚑 当前城墙: <b style="color: ${tdState.castle.hp < tdState.castle.maxHp * 0.5 ? '#f43f5e' : '#fde047'}">${Math.round(tdState.castle.hp)}</b>/${tdState.castle.maxHp} HP
+                                </div>
+                                <button onclick="triggerEmergencyRepairNow()" ${canQuickRepair ? '' : 'disabled'}
+                                    style="background: ${canQuickRepair ? 'linear-gradient(135deg, #10b981, #059669)' : '#334155'}; color: white; border: none; padding: 5px 12px; border-radius: 10px; font-weight: bold; cursor: ${canQuickRepair ? 'pointer' : 'not-allowed'}; font-size: 0.78rem; box-shadow: ${canQuickRepair ? '0 2px 10px rgba(16,185,129,0.4)' : 'none'};">
+                                    🚨 消耗1点立即抢修 (+${healEst}HP & 金盾)
+                                </button>
+                            </div>
+                        `;
+                    }
+
                     html += `
                         ${connArrow}
-                        <div style="${bgStyle} ${borderStyle} border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
-                            <div style="flex: 1;">
-                                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                                    <span style="font-size: 1.05rem; font-weight: bold; color: ${prereqMet ? branch.color : '#94a3b8'};">${def.name}</span>
-                                    ${badgeHtml}
+                        <div style="${bgStyle} ${borderStyle} border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;">
+                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                                <div style="flex: 1;">
+                                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                        <span style="font-size: 1.05rem; font-weight: bold; color: ${prereqMet ? branch.color : '#94a3b8'};">${def.name}</span>
+                                        ${badgeHtml}
+                                    </div>
+                                    <div style="font-size: 0.8rem; color: #cbd5e1; margin-top: 4px; line-height: 1.35;">${def.desc}</div>
                                 </div>
-                                <div style="font-size: 0.8rem; color: #cbd5e1; margin-top: 4px; line-height: 1.35;">${def.desc}</div>
+                                <button onclick="upgradeDefense('${key}')" ${canAfford ? '' : 'disabled'} 
+                                    style="background: ${canAfford ? 'linear-gradient(135deg, #f97316, #ea580c)' : '#334155'}; color: white; border: none; padding: 8px 14px; border-radius: 12px; font-weight: bold; cursor: ${canAfford ? 'pointer' : 'not-allowed'}; white-space: nowrap; font-size: 0.82rem; box-shadow: ${canAfford ? '0 4px 12px rgba(249,115,22,0.4)' : 'none'};">
+                                    ${btnText}
+                                </button>
                             </div>
-                            <button onclick="upgradeDefense('${key}')" ${canAfford ? '' : 'disabled'} 
-                                style="background: ${canAfford ? 'linear-gradient(135deg, #f97316, #ea580c)' : '#334155'}; color: white; border: none; padding: 8px 14px; border-radius: 12px; font-weight: bold; cursor: ${canAfford ? 'pointer' : 'not-allowed'}; white-space: nowrap; font-size: 0.82rem; box-shadow: ${canAfford ? '0 4px 12px rgba(249,115,22,0.4)' : 'none'};">
-                                ${btnText}
-                            </button>
+                            ${extraActionHtml}
                         </div>
                     `;
                 }
@@ -1558,20 +1787,6 @@
                 `;
             }
 
-            // 紧急修复城墙
-            const canRepair = tdState.buildPoints > 0 && tdState.castle.hp < tdState.castle.maxHp;
-            html += `
-                <div style="background: #1e293b; border: 1.5px solid #10b981; border-radius: 14px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 6px;">
-                    <div style="flex: 1;">
-                        <div style="font-size: 1.05rem; font-weight: bold; color: #10b981;">🛠️ 紧急修补城墙</div>
-                        <div style="font-size: 0.8rem; color: #cbd5e1; margin-top: 2px;">调度工匠修补受损城墙，恢复 2500 点耐久度 (当前城墙: ${Math.round(tdState.castle.hp)}/${tdState.castle.maxHp})</div>
-                    </div>
-                    <button onclick="upgradeDefense('wallRepair')" ${canRepair ? '' : 'disabled'} style="background: ${canRepair ? 'linear-gradient(135deg, #10b981, #059669)' : '#334155'}; color: white; border: none; padding: 8px 16px; border-radius: 12px; font-weight: bold; cursor: ${canRepair ? 'pointer' : 'not-allowed'}; white-space: nowrap;">
-                        🛠️ 修复城墙 (+2500HP)
-                    </button>
-                </div>
-            `;
-
             listEl.innerHTML = html;
         }
 
@@ -1579,104 +1794,173 @@
         function upgradeDefense(key) {
             if (tdState.buildPoints <= 0) return;
 
-            if (key === 'wallRepair') {
-                if (tdState.castle.hp >= tdState.castle.maxHp) return;
-                tdState.buildPoints--;
+            const def = tdState.defenses[key];
+            if (!def || def.level >= def.maxLevel) return;
+
+            // 检查前置条件
+            if (def.prereq && (!tdState.defenses[def.prereq] || tdState.defenses[def.prereq].level <= 0)) {
+                addFloatingText(tdState.castle.width / 2, tdState.castle.y - 30, `⚠️ 前置科技未研习！请先解锁 [${tdState.defenses[def.prereq].name}]!`, "#f43f5e");
+                return;
+            }
+
+            tdState.buildPoints--;
+            def.level++;
+
+            // === 🛠️ 机关修复分支研习效果 ===
+            if (key === 'repairSystem') {
+                const heal = 800;
+                tdState.castle.hp = Math.min(tdState.castle.maxHp, tdState.castle.hp + heal);
+                addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🛠️ [墨家机关修葺] Lv.${def.level}! 自愈速率大幅提升 (每秒+${def.level * 30}HP)!`, "#10b981");
+                addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#10b981", 20);
+            } else if (key === 'emergencyRepair') {
+                const heal = 2500 + (def.level - 1) * 1300;
+                tdState.castle.hp = Math.min(tdState.castle.maxHp, tdState.castle.hp + heal);
+                tdState.castleShieldTimer = 6.0;
+                addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🚨 [机关紧急抢修] Lv.${def.level}! 抢修恢复+${heal}HP & 触发6秒金刚盾!`, "#10b981");
+                addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#10b981", 22);
+            } else if (key === 'engineerCrew') {
+                addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `👷 [墨家工兵机动连] Lv.${def.level}! 全城修复效率+${def.level * 35}% & 阻滞烟幕!`, "#10b981");
+                addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#10b981", 20);
+            } else if (key === 'towerRestoration') {
+                // 修复所有受损器械
+                const towers = [tdState.defenses.leftTower, tdState.defenses.centerTower, tdState.defenses.rightTower];
+                for (let t of towers) {
+                    if (t.level > 0) t.hp = t.maxHp;
+                }
+                if (tdState.defenses.chevalDeFrise && tdState.defenses.chevalDeFrise.level > 0) {
+                    tdState.defenses.chevalDeFrise.hp = tdState.defenses.chevalDeFrise.maxHp;
+                }
+                addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🏹 [守城器械自动维保] Lv.${def.level}! 全塔楼器械满血维保!`, "#10b981");
+                addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#10b981", 22);
+            } else if (key === 'trapResetMech') {
+                if (tdState.defenses.rollingLog.level > 0) tdState.defenses.rollingLog.charges = 2;
+                if (tdState.defenses.boilingOil.level > 0) tdState.defenses.boilingOil.charges = 3;
+                if (tdState.defenses.pitfall.level > 0) tdState.defenses.pitfall.durability = tdState.defenses.pitfall.maxDurability;
+                addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🪵 [陷阱机簧自填装] Lv.${def.level}! 陷阱储备满载填装!`, "#10b981");
+                addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#10b981", 20);
+            } else if (key === 'structureReinforce') {
+                const addHp = 2500 + (def.level - 1) * 3000;
+                tdState.castle.maxHp += addHp;
+                tdState.castle.hp += addHp;
+                addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🧱 [榫卯机括加固] Lv.${def.level}! 城墙HP上限+${addHp}，全城减伤+${def.level * 6}%!`, "#10b981");
+                addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#10b981", 24);
+            } else if (key === 'gearShield') {
+                def.maxShield = 1500 + def.level * 900;
+                def.currentShield = def.maxShield;
+                def.cd = Math.max(12, 35 - def.level * 5);
+                addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🛡️ [机关金刚护盾力场] Lv.${def.level}! 生成 ${def.currentShield} 护盾罩!`, "#38bdf8");
+                addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#38bdf8", 25);
+            }
+
+            // === 🛡️ 城堡与铠甲分支 ===
+            else if (key === 'armor1') {
+                tdState.castle.maxHp += 1500;
+                tdState.castle.hp = Math.min(tdState.castle.maxHp, tdState.castle.hp + 1500);
+                addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🛡️ [基础加固铠甲] Lv.${def.level}! 城墙HP+1500, 受伤减免+10%!`, "#38bdf8");
+                addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#38bdf8", 18);
+            } else if (key === 'armor2') {
+                tdState.castle.maxHp += 2500;
                 tdState.castle.hp = Math.min(tdState.castle.maxHp, tdState.castle.hp + 2500);
-                addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 20, "🛠️ 城墙修复 +2500 HP!", "#10b981");
-                addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y, "#10b981", 15);
-            } else {
-                const def = tdState.defenses[key];
-                if (!def || def.level >= def.maxLevel) return;
+                addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🦾 [精钢重型锁子甲] Lv.${def.level}! 城墙HP+2500, 额外减伤+10%!`, "#38bdf8");
+                addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#38bdf8", 22);
+            } else if (key === 'bullhideNet') {
+                addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🐂 [巨型牛皮反弹网] Lv.${def.level}! 巨石反弹率大幅跃升!`, "#38bdf8");
+                addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#38bdf8", 20);
+            } else if (key === 'moat') {
+                def.slowPct = Math.min(0.85, 0.55 + (def.level - 1) * 0.08);
+                def.dps = 12 + (def.level - 1) * 4;
+                const moatHeight = 12 + def.level * 10;
+                addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🌊 护城河工程加宽! (宽度:${moatHeight}px | 减速${Math.round(def.slowPct*100)}%)`, "#38bdf8");
+                addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#38bdf8", 20);
+            } else if (key === 'chevalDeFrise') {
+                def.maxHp += 800;
+                def.hp = def.maxHp;
+                def.atk += 20;
+                addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🚧 尖刺拒马阵升级成功! (反弹伤害:${def.atk})`, "#f97316");
+                addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#ea580c", 20);
+            }
 
-                // 检查前置条件
-                if (def.prereq && (!tdState.defenses[def.prereq] || tdState.defenses[def.prereq].level <= 0)) {
-                    addFloatingText(tdState.castle.width / 2, tdState.castle.y - 30, `⚠️ 前置科技未研习！请先解锁 [${tdState.defenses[def.prereq].name}]!`, "#f43f5e");
-                    return;
-                }
+            // === 🏹 远射与弓弩分支 ===
+            else if (key === 'archery') {
+                addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🏹 [射术与箭技精通] Lv.${def.level}! 全员远程伤害 +20%!`, "#fde047");
+                addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#fde047", 18);
+            } else if (key === 'crossbow') {
+                addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🎯 [劲弩与强弩连发] Lv.${def.level}! 射速+15% & 贯穿破甲!`, "#fde047");
+                addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#fde047", 18);
+            } else if (key === 'repeatingCrossbow') {
+                def.atk = Math.round(def.atk * 1.35);
+                def.rate = Math.max(0.9, def.rate * 0.88);
+                const bursts = 3 + (def.level - 1) * 2;
+                addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🎯 [诸葛连弩机关车] Lv.${def.level}! ${bursts}连发暴风箭雨!`, "#38bdf8");
+                addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#38bdf8", 22);
+            } else if (key === 'leftTower' || key === 'centerTower' || key === 'rightTower') {
+                def.atk = Math.round(def.atk * 1.35);
+                def.rate = Math.max(0.4, def.rate * 0.88);
+                def.maxHp = 500 + def.level * 300;
+                def.hp = def.maxHp;
+                addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🎉 [${def.name}] 建造/升级成功 (Lv.${def.level})!`, "#fde047");
+                addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#f97316", 18);
+            } else if (key === 'wallArchers') {
+                def.count += 2;
+                def.atk = Math.round(def.atk * 1.25);
+                def.maxHp = def.count * 200;
+                def.hp = def.maxHp;
+                addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🏹💂 精锐长弓手队进驻城墙！(队伍规模: ${def.count}人)`, "#fde047");
+                addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#fde047", 20);
+            } else if (key === 'volleyFire') {
+                addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🔥 [万箭齐发与火箭] Lv.${def.level}! 火箭概率攀升至 ${def.level * 18}%!`, "#f97316");
+                addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#f97316", 20);
+            }
 
-                tdState.buildPoints--;
-                def.level++;
+            // === 💥 攻城与机关分支 ===
+            else if (key === 'traps') {
+                addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `⚙️ [机关工程学] Lv.${def.level}! 陷阱与攻城器伤害 +25%!`, "#f97316");
+                addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#f97316", 18);
+            } else if (key === 'catapult') {
+                def.atk = Math.round(def.atk * 1.4);
+                def.rate = Math.max(1.8, def.rate * 0.85);
+                addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🪨 烈焰巨石投石机升级成功! (伤害:${def.atk})`, "#ea580c");
+                addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#ea580c", 20);
+            } else if (key === 'napalmBoulder') {
+                addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🔥 炽热硫磺燃烧弹 Lv.${def.level}! 持续火海范围与伤害暴涨!`, "#ea580c");
+                addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#ea580c", 20);
+            } else if (key === 'ballista') {
+                def.atk = Math.round(550 * (1 + (def.level - 1) * 0.45));
+                def.rate = Math.max(3.0, 4.5 - (def.level - 1) * 0.3);
+                const boltCount = def.level >= 3 ? 3 : (def.level >= 2 ? 2 : 1);
+                addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🎯 灭世穿透重弩 Lv.${def.level}! (${boltCount}支贯穿重箭/单箭伤害:${def.atk})`, "#38bdf8");
+                addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#38bdf8", 22);
+            } else if (key === 'boilingOil') {
+                def.charges += 2;
+                def.atk += 25;
+                addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🧪 金汁毒热油储备充沛! (次: ${def.charges})`, "#f59e0b");
+                addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#f59e0b", 20);
+            } else if (key === 'rollingLog') {
+                def.charges += 1;
+                addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🪵 巨型带刺滚木充能完成!`, "#d97706");
+                addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#d97706", 20);
+            } else if (key === 'pitfall') {
+                def.maxDurability = 800 * def.level;
+                def.durability = def.maxDurability;
+                def.slowPct = Math.min(0.85, 0.45 + (def.level - 1) * 0.08);
+                def.dps = 30 + (def.level - 1) * 25;
+                addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🕳️ [隐蔽陷坑阵] 挖设/重构! (耐久:${def.durability}伤害 | 减速${Math.round(def.slowPct*100)}%)`, "#f97316");
+                addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#d97706", 20);
+            }
 
-                // 研习与升级效果
-                if (key === 'armor1') {
-                    tdState.castle.maxHp += 1500;
-                    tdState.castle.hp = Math.min(tdState.castle.maxHp, tdState.castle.hp + 1500);
-                    addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🛡️ [基础加固铠甲] Lv.${def.level}! 城墙HP+1500, 受伤减免+10%!`, "#38bdf8");
-                    addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#38bdf8", 18);
-                } else if (key === 'armor2') {
-                    tdState.castle.maxHp += 2500;
-                    tdState.castle.hp = Math.min(tdState.castle.maxHp, tdState.castle.hp + 2500);
-                    addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🦾 [精钢重型锁子甲] Lv.${def.level}! 城墙HP+2500, 额外减伤+10%!`, "#38bdf8");
-                    addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#38bdf8", 22);
-                } else if (key === 'archery') {
-                    addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🏹 [射术与箭技精通] Lv.${def.level}! 全员远程伤害 +20%!`, "#fde047");
-                    addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#fde047", 18);
-                } else if (key === 'crossbow') {
-                    addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🎯 [劲弩与强弩连发] Lv.${def.level}! 射速+15% & 贯穿破甲!`, "#fde047");
-                    addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#fde047", 18);
-                } else if (key === 'repeatingCrossbow') {
-                    def.atk = Math.round(def.atk * 1.35);
-                    def.rate = Math.max(0.9, def.rate * 0.88);
-                    const bursts = 3 + (def.level - 1) * 2;
-                    addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🎯 [诸葛连弩机关车] Lv.${def.level}! ${bursts}连发暴风箭雨!`, "#38bdf8");
-                    addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#38bdf8", 22);
-                } else if (key === 'traps') {
-                    addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `⚙️ [机关工程学] Lv.${def.level}! 陷阱与攻城器伤害 +25%!`, "#f97316");
-                    addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#f97316", 18);
-                } else if (key === 'leftTower' || key === 'centerTower' || key === 'rightTower') {
-                    def.atk = Math.round(def.atk * 1.35);
-                    def.rate = Math.max(0.4, def.rate * 0.88);
-                    def.maxHp = 500 + def.level * 300;
-                    def.hp = def.maxHp;
-                    addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🎉 [${def.name}] 建造/升级成功 (Lv.${def.level})!`, "#fde047");
-                    addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#f97316", 18);
-                } else if (key === 'wallArchers') {
-                    def.count += 2;
-                    def.atk = Math.round(def.atk * 1.25);
-                    def.maxHp = def.count * 200;
-                    def.hp = def.maxHp;
-                    addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🏹💂 精锐长弓手队进驻城墙！(队伍规模: ${def.count}人)`, "#fde047");
-                    addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#fde047", 20);
-                } else if (key === 'moat') {
-                    def.slowPct = Math.min(0.85, 0.55 + (def.level - 1) * 0.08);
-                    def.dps = 12 + (def.level - 1) * 4;
-                    const moatHeight = 12 + def.level * 10;
-                    addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🌊 护城河工程加宽! (宽度:${moatHeight}px | 减速${Math.round(def.slowPct*100)}%)`, "#38bdf8");
-                    addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#38bdf8", 20);
-                } else if (key === 'chevalDeFrise') {
-                    def.maxHp += 800;
-                    def.hp = def.maxHp;
-                    def.atk += 20;
-                    addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🚧 尖刺拒马阵升级成功! (反弹伤害:${def.atk})`, "#f97316");
-                    addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#ea580c", 20);
-                } else if (key === 'catapult') {
-                    def.atk = Math.round(def.atk * 1.4);
-                    def.rate = Math.max(1.8, def.rate * 0.85);
-                    addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🪨 烈焰巨石投石机升级成功! (伤害:${def.atk})`, "#ea580c");
-                    addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#ea580c", 20);
-                } else if (key === 'ballista') {
-                    def.atk = Math.round(def.atk * 1.45);
-                    def.rate = Math.max(1.5, def.rate * 0.85);
-                    addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🎯 灭世连发床弩升级成功! (伤害:${def.atk})`, "#cbd5e1");
-                    addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#cbd5e1", 20);
-                } else if (key === 'boilingOil') {
-                    def.charges += 2;
-                    def.atk += 25;
-                    addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🧪 金汁毒热油储备充沛! (次: ${def.charges})`, "#f59e0b");
-                    addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#f59e0b", 20);
-                } else if (key === 'rollingLog') {
-                    def.charges += 1;
-                    addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🪵 巨型带刺滚木充能完成!`, "#d97706");
-                    addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#d97706", 20);
-                } else if (key === 'pitfall') {
-                    def.maxDurability = 800 * def.level;
-                    def.durability = def.maxDurability;
-                    def.slowPct = Math.min(0.85, 0.45 + (def.level - 1) * 0.08);
-                    def.dps = 30 + (def.level - 1) * 25;
-                    addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🕳️ [隐蔽陷坑阵] 挖设/重构! (耐久:${def.durability}伤害 | 减速${Math.round(def.slowPct*100)}%)`, "#f97316");
-                    addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#d97706", 20);
-                }
+            // === 👑 武将与军略分支 ===
+            else if (key === 'heroAtk') {
+                addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `⚔️ [三军名将勇武] Lv.${def.level}! 武将斩杀攻击力 +${def.level * 20}%!`, "#a855f7");
+                addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#a855f7", 20);
+            } else if (key === 'heroCd') {
+                addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `⚡ [兵贵神速领悟] Lv.${def.level}! 武将技能冷却缩短 ${def.level * 12}%!`, "#a855f7");
+                addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#a855f7", 20);
+            } else if (key === 'heroLifesteal') {
+                addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🩸 [越战越勇汲血] Lv.${def.level}! 斩杀回血 +${30 + def.level * 20}HP!`, "#a855f7");
+                addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#a855f7", 20);
+            } else if (key === 'heroMastery') {
+                addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 30, `🌟 [万夫莫敌神速] Lv.${def.level}! 升级击杀门槛降低 ${def.level * 15}%!`, "#a855f7");
+                addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 10, "#a855f7", 20);
             }
 
             renderTechTreeModal();
@@ -1737,19 +2021,93 @@
             addParticles(tdState.castle.width / 2, tdState.castle.y - 15, "#eab308", 25);
         }
 
+        // 动态射程计算：随着战场画布扩大按比例动态放大，并受射术/科技加成
+        function getScaleFactor() {
+            if (!canvas || !canvas.height) return 1.0;
+            // 标准基准高度为 220px，当最大化战斗扩大到 380px 时，射程自动同比例放大 ~1.73x
+            return Math.max(1.0, canvas.height / 220);
+        }
+
+        function getEffectiveTowerRange(t) {
+            const archeryLvl = (tdState && tdState.defenses && tdState.defenses.archery) ? tdState.defenses.archery.level : 0;
+            const archeryScale = 1.0 + archeryLvl * 0.15;
+            const baseRange = (t && t.range) ? t.range : 150;
+            return Math.round(baseRange * getScaleFactor() * archeryScale);
+        }
+
+        function getEffectiveHeroRange(hero) {
+            const archeryLvl = (tdState && tdState.defenses && tdState.defenses.archery) ? tdState.defenses.archery.level : 0;
+            const archeryScale = (hero && hero.type === 'archer') ? (1.0 + archeryLvl * 0.18) : 1.0;
+            const baseRange = (hero && hero.range) ? hero.range : (hero && hero.type === 'archer' ? 240 : (hero && hero.type === 'melee' ? 65 : 180));
+            return Math.round(baseRange * getScaleFactor() * archeryScale);
+        }
+
+        // 英雄与武将多点分散站位算法 (拒绝聚集在左侧，避免重叠，根据城墙与城外开阔空间均匀分布)
+        function recalculateHeroPositions() {
+            if (!tdState || !tdState.playerHeroes || tdState.playerHeroes.length === 0) return;
+            const castle = tdState.castle;
+            if (!castle || !castle.width) return;
+
+            const meleeHeroes = tdState.playerHeroes.filter(h => h.type === 'melee');
+            const wallHeroes = tdState.playerHeroes.filter(h => h.type !== 'melee');
+
+            // 1. 近战猛将站位：在城墙前方开阔地带 (y = castle.y - 42 ~ castle.y - 58) 左右对称均匀散开
+            const meleeCount = meleeHeroes.length;
+            if (meleeCount === 1) {
+                meleeHeroes[0].x = castle.x + castle.width * 0.5;
+                meleeHeroes[0].y = castle.y - 48;
+            } else if (meleeCount > 1) {
+                const usableWidth = castle.width - 60;
+                const step = usableWidth / (meleeCount + 1);
+                for (let i = 0; i < meleeCount; i++) {
+                    meleeHeroes[i].x = castle.x + 30 + step * (i + 1);
+                    // 前后微错开，呈现梯形作战方阵
+                    meleeHeroes[i].y = castle.y - 46 - ((i % 2 === 0) ? 6 : -4);
+                }
+            }
+
+            // 2. 城墙远程/修补/谋士英雄站位：在城墙上方女墙通道均匀排布，避开防御塔中心与彼此重叠
+            const wallCount = wallHeroes.length;
+            if (wallCount === 1) {
+                wallHeroes[0].x = castle.x + castle.width * 0.38;
+                wallHeroes[0].y = castle.y + 18;
+            } else if (wallCount > 1) {
+                const occupiedX = [
+                    castle.x + 28,                       // 左塔
+                    castle.x + castle.width / 2,          // 中塔
+                    castle.x + castle.width - 28         // 右塔
+                ];
+
+                const usableWidth = castle.width - 70;
+                const step = usableWidth / (wallCount + 1);
+                for (let i = 0; i < wallCount; i++) {
+                    let idealX = castle.x + 35 + step * (i + 1);
+                    // 如果离固定箭塔太近 (< 24px)，微调避开
+                    for (let ox of occupiedX) {
+                        if (Math.abs(idealX - ox) < 24) {
+                            idealX += (idealX >= ox ? 24 : -24);
+                        }
+                    }
+                    wallHeroes[i].x = Math.max(castle.x + 18, Math.min(castle.x + castle.width - 18, idealX));
+                    wallHeroes[i].y = castle.y + 16 + ((i % 2 === 0) ? 6 : -4);
+                }
+            }
+        }
+
         function setupCanvasDimensions() {
             if (!canvas) return;
             const parent = canvas.parentElement;
             const parentWidth = parent ? (parent.clientWidth || parent.getBoundingClientRect().width) : 320;
             const displayWidth = Math.max(280, parentWidth > 0 ? parentWidth : 320);
-            const displayHeight = 220;
+            const isBattle = typeof tdState !== 'undefined' && tdState && tdState.phase === 'battle';
+            const displayHeight = isBattle ? (window.innerHeight < 650 ? 280 : 380) : 220;
 
             canvas.width = displayWidth;
             canvas.height = displayHeight;
 
             tdState.castle.x = 10;
             tdState.castle.width = displayWidth - 20;
-            tdState.castle.y = displayHeight - 48; // 城墙主体 y = 172
+            tdState.castle.y = displayHeight - 48; // 城墙主体
             tdState.castle.height = 42;
 
             // 建造设施坐落在城墙内部高台上
@@ -1762,16 +2120,8 @@
             tdState.defenses.rightTower.x = tdState.castle.x + tdState.castle.width - 28;
             tdState.defenses.rightTower.y = tdState.castle.y + 16;
 
-            // 更新已招募的三国英雄坐标 (近战出城，远程在城内)
-            for (let i = 0; i < tdState.playerHeroes.length; i++) {
-                const hero = tdState.playerHeroes[i];
-                hero.x = tdState.castle.x + 35 + (i * 40) % (tdState.castle.width - 70);
-                if (hero.type === 'melee') {
-                    hero.y = tdState.castle.y - 45;
-                } else {
-                    hero.y = tdState.castle.y + 14;
-                }
-            }
+            // 智能分布武将与英雄站位 (防止重叠与偏左扎堆)
+            recalculateHeroPositions();
         }
 
         function initBattleGame() {
@@ -1990,8 +2340,22 @@
             const dt = Math.min(0.08, (timestamp - lastTimestamp) / 1000);
             lastTimestamp = timestamp;
 
-            // 未被暂停时，战场单位与战斗逻辑平稳运转
+            // ⏱️ 背诵时间 / 战斗时间 倒计时推进 (无弹窗且未手动暂停时)
             if (tdState.running && !tdState.winner && !tdState.pausedByModal && !tdState.isManualPaused) {
+                tdState.phaseTimer -= dt;
+                if (tdState.phaseTimer <= 0) {
+                    if (tdState.phase === 'study') {
+                        startBattlePhase();
+                    } else {
+                        startStudyPhase();
+                    }
+                }
+            }
+            updatePhaseUI();
+
+            // ⚔️ 只有在战斗阶段 (battle) 且未被暂停时，战场单位与战斗逻辑全速运转
+            // 📖 背诵阶段 (study) 战场静止休整，方便玩家专心背词积累升级点
+            if (tdState.running && !tdState.winner && !tdState.pausedByModal && !tdState.isManualPaused && tdState.phase === 'battle') {
                 tdState.gameTime += dt;
                 updateTowerDefense(dt);
             }
@@ -2087,24 +2451,144 @@
             }
         }
 
+        // 城堡受损计算 (统一经由铠甲减伤、机关加固、紧急力场护盾与金刚护盾削减)
+        function applyCastleDamage(rawDmg, x, y) {
+            const armor1Lvl = tdState.defenses.armor1 ? tdState.defenses.armor1.level : 0;
+            const armor2Lvl = tdState.defenses.armor2 ? tdState.defenses.armor2.level : 0;
+            const armorReduct = Math.min(0.50, armor1Lvl * 0.10 + armor2Lvl * 0.10);
+
+            const structLvl = tdState.defenses.structureReinforce ? tdState.defenses.structureReinforce.level : 0;
+            const structReduct = structLvl * 0.06;
+
+            const emergencyShieldMult = (tdState.castleShieldTimer && tdState.castleShieldTimer > 0) ? 0.45 : 1.0;
+
+            let dmg = Math.max(1, Math.round(rawDmg * (1 - armorReduct) * (1 - structReduct) * emergencyShieldMult));
+
+            const gearDef = tdState.defenses.gearShield;
+            if (gearDef && gearDef.level > 0 && gearDef.currentShield > 0) {
+                if (gearDef.currentShield >= dmg) {
+                    gearDef.currentShield -= dmg;
+                    addFloatingText(x, y, `🛡️ 金刚护盾抵挡 -${dmg}！(余盾:${Math.round(gearDef.currentShield)})`, "#38bdf8");
+                    addParticles(x, y, "#38bdf8", 6);
+                    return;
+                } else {
+                    const absorbed = Math.round(gearDef.currentShield);
+                    dmg -= absorbed;
+                    gearDef.currentShield = 0;
+                    addFloatingText(x, y, `🛡️ 护盾抵挡 -${absorbed} (力场破碎)!`, "#38bdf8");
+                    addParticles(x, y, "#38bdf8", 12);
+                }
+            }
+
+            tdState.castle.hp -= dmg;
+            addFloatingText(x, y, `-${dmg}`, "#f43f5e");
+            if (tdState.castle.hp <= 0) {
+                tdState.castle.hp = 0;
+                tdState.winner = 'defeat';
+            }
+        }
+
         // 逻辑更新
         function updateTowerDefense(dt) {
-            // 0. 🛠️ 墨家机关修葺 (自动维修系统)
+            const weather = tdState.currentWeather || WEATHERS.clear;
+
+            // 0. ⏱️ 机关紧急防御力场与金刚护盾倒计时
+            if (tdState.castleShieldTimer && tdState.castleShieldTimer > 0) {
+                tdState.castleShieldTimer -= dt;
+            }
+
+            const gearDef = tdState.defenses.gearShield;
+            if (gearDef && gearDef.level > 0 && gearDef.currentShield < gearDef.maxShield) {
+                gearDef.timer = (gearDef.timer || 0) + dt;
+                if (gearDef.timer >= gearDef.cd) {
+                    gearDef.timer = 0;
+                    gearDef.currentShield = gearDef.maxShield;
+                    addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 25, `🛡️ 机关金刚护盾充能完毕 (+${gearDef.maxShield}护盾)!`, "#38bdf8");
+                    addParticles(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 15, "#38bdf8", 20);
+                }
+            }
+
+            // 0b. 🛠️ 墨家机关修葺 & 工兵连持续抢修
             const repairLvl = tdState.defenses.repairSystem ? tdState.defenses.repairSystem.level : 0;
+            const engLvl = tdState.defenses.engineerCrew ? tdState.defenses.engineerCrew.level : 0;
+            const engMult = 1.0 + engLvl * 0.35;
+
             if (repairLvl > 0) {
-                const repairRate = repairLvl * 25; // 25 ~ 125 HP/秒
+                const repairRate = (25 + repairLvl * 25) * engMult; // 25 ~ 150+ HP/秒
                 if (tdState.castle.hp < tdState.castle.maxHp) {
                     tdState.castle.hp = Math.min(tdState.castle.maxHp, tdState.castle.hp + repairRate * dt);
+                    tdState.castleRepairPulseTimer = (tdState.castleRepairPulseTimer || 0) + dt;
+                    if (tdState.castleRepairPulseTimer >= 2.0) {
+                        tdState.castleRepairPulseTimer = 0;
+                        const tickHeal = Math.round(repairRate * 2.0);
+                        addFloatingText(tdState.castle.x + tdState.castle.width * 0.5, tdState.castle.y - 12, `🛠️修补 +${tickHeal}`, "#34d399");
+                    }
                 }
+            }
+
+            // 0c. 🏹 守城器械自动维保 (受损箭塔/拒马持续回血与倒地重建)
+            const restoreLvl = tdState.defenses.towerRestoration ? tdState.defenses.towerRestoration.level : 0;
+            if (restoreLvl > 0) {
+                const towerRestoreRate = (25 + restoreLvl * 20) * engMult;
                 const towers = [tdState.defenses.leftTower, tdState.defenses.centerTower, tdState.defenses.rightTower];
                 for (let t of towers) {
                     if (t.level > 0 && t.hp > 0 && t.hp < t.maxHp) {
-                        t.hp = Math.min(t.maxHp, t.hp + repairRate * 0.5 * dt);
+                        t.hp = Math.min(t.maxHp, t.hp + towerRestoreRate * dt);
+                        t.repairPulseTimer = (t.repairPulseTimer || 0) + dt;
+                        if (t.repairPulseTimer >= 2.5) {
+                            t.repairPulseTimer = 0;
+                            const tickTowerHeal = Math.round(towerRestoreRate * 2.5);
+                            addFloatingText(t.x, t.y - 14, `🔧维保 +${tickTowerHeal}`, "#34d399");
+                        }
+                    } else if (t.level > 0 && t.hp <= 0) {
+                        t.reviveTimer = (t.reviveTimer || 0) + dt;
+                        const reviveReq = Math.max(6, 16 - restoreLvl * 2);
+                        if (t.reviveTimer >= reviveReq) {
+                            t.reviveTimer = 0;
+                            t.hp = Math.round(t.maxHp * 0.8);
+                            addFloatingText(t.x, t.y - 15, `🔧 [${t.name}] 器械维保重建复活!`, "#10b981");
+                            addParticles(t.x, t.y, "#10b981", 16);
+                        }
                     }
                 }
+
                 const cheval = tdState.defenses.chevalDeFrise;
-                if (cheval && cheval.level > 0 && cheval.hp > 0 && cheval.hp < cheval.maxHp) {
-                    cheval.hp = Math.min(cheval.maxHp, cheval.hp + repairRate * 0.5 * dt);
+                if (cheval && cheval.level > 0) {
+                    if (cheval.hp > 0 && cheval.hp < cheval.maxHp) {
+                        cheval.hp = Math.min(cheval.maxHp, cheval.hp + towerRestoreRate * dt);
+                    } else if (cheval.hp <= 0) {
+                        cheval.reviveTimer = (cheval.reviveTimer || 0) + dt;
+                        const chevalReq = Math.max(6, 18 - restoreLvl * 2.5);
+                        if (cheval.reviveTimer >= chevalReq) {
+                            cheval.reviveTimer = 0;
+                            cheval.hp = cheval.maxHp;
+                            addFloatingText(tdState.castle.width / 2, tdState.castle.y - 20, `🚧 尖刺拒马重新拼装立起!`, "#10b981");
+                            addParticles(tdState.castle.width / 2, tdState.castle.y - 20, "#10b981", 14);
+                        }
+                    }
+                }
+            }
+
+            // 0d. 🪵 机关陷阱机簧自填装 (滚木/热油自动充能储备 & 陷坑自动修复耐久)
+            const trapResetDef = tdState.defenses.trapResetMech;
+            if (trapResetDef && trapResetDef.level > 0) {
+                trapResetDef.timer = (trapResetDef.timer || 0) + dt;
+                const resetInterval = Math.max(12, 38 - trapResetDef.level * 5);
+                if (trapResetDef.timer >= resetInterval) {
+                    trapResetDef.timer = 0;
+                    if (tdState.defenses.rollingLog && tdState.defenses.rollingLog.level > 0 && tdState.defenses.rollingLog.charges < 2) {
+                        tdState.defenses.rollingLog.charges++;
+                        addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 35, "🪵 机簧自装填：带刺滚木储备+1!", "#10b981");
+                    }
+                    if (tdState.defenses.boilingOil && tdState.defenses.boilingOil.level > 0 && tdState.defenses.boilingOil.charges < 3) {
+                        tdState.defenses.boilingOil.charges++;
+                        addFloatingText(tdState.castle.width / 2 + tdState.castle.x, tdState.castle.y - 45, "🧪 机簧自装填：热油储备+1!", "#10b981");
+                    }
+                }
+
+                const pitfall = tdState.defenses.pitfall;
+                if (pitfall && pitfall.level > 0 && pitfall.durability < pitfall.maxDurability) {
+                    pitfall.durability = Math.min(pitfall.maxDurability, pitfall.durability + (30 + trapResetDef.level * 25) * dt);
                 }
             }
 
@@ -2314,12 +2798,7 @@
                                             }
                                         }
                                     } else {
-                                        tdState.castle.hp -= actualDmg;
-                                        addFloatingText(enemy.x, castleY - 20, `-${actualDmg}`, "#f43f5e");
-                                        if (tdState.castle.hp <= 0) {
-                                            tdState.castle.hp = 0;
-                                            tdState.winner = 'defeat';
-                                        }
+                                        applyCastleDamage(enemy.atk, enemy.x, castleY - 20);
                                     }
                                 }
                             } 
@@ -2343,7 +2822,7 @@
                 }
             }
 
-            // 3. 我方玩家三国神将技能与攻击
+            // 3. 👑 我方玩家三国神将技能与攻击 (猛将、神射雷法、机关修补、增益/减益)
             const heroAtkLvl = tdState.defenses.heroAtk ? tdState.defenses.heroAtk.level : 0;
             const heroAtkBonus = 1.0 + heroAtkLvl * 0.20;
             const heroCdLvl = tdState.defenses.heroCd ? tdState.defenses.heroCd.level : 0;
@@ -2357,20 +2836,36 @@
                 }
 
                 hero.timer += dt;
-                if (hero.timer >= hero.rate * heroCdMult) {
-                    const actualHeroAtk = Math.round(hero.atk * heroAtkBonus);
+                let effectiveRate = hero.rate * heroCdMult;
+
+                // 🌦️ 天气对雷法武将的加成
+                let weatherHeroAtkMult = 1.0;
+                if (hero.isLightning) {
+                    if (weather.id === 'thunderstorm') {
+                        weatherHeroAtkMult = 2.0;
+                        effectiveRate *= 0.55;
+                    } else if (weather.id === 'rain') {
+                        weatherHeroAtkMult = 1.6;
+                        effectiveRate *= 0.75;
+                    }
+                }
+
+                if (hero.timer >= effectiveRate) {
+                    const actualHeroAtk = Math.round(hero.atk * heroAtkBonus * weatherHeroAtkMult);
+                    hero.timer = 0;
+
                     if (hero.type === 'archer') {
+                        const effRange = getEffectiveHeroRange(hero);
                         let target = null, minD = 9999;
                         for (let enemy of tdState.enemies) {
                             const d = Math.hypot(enemy.x - hero.x, enemy.y - hero.y);
-                            if (d <= hero.range && d < minD) {
+                            if (d <= effRange && d < minD) {
                                 minD = d;
                                 target = enemy;
                             }
                         }
 
                         if (target) {
-                            hero.timer = 0;
                             if (hero.isAoE) {
                                 const napalmLvl = tdState.defenses.napalmBoulder ? tdState.defenses.napalmBoulder.level : 0;
                                 tdState.projectiles.push({
@@ -2408,23 +2903,97 @@
                         }
                     } else if (hero.type === 'melee') {
                         // 近战猛将出城迎敌斩杀
+                        const effMeleeRange = getEffectiveHeroRange(hero);
                         let target = null, minD = 9999;
                         for (let enemy of tdState.enemies) {
                             const d = Math.hypot(enemy.x - hero.x, enemy.y - hero.y);
-                            if (d <= hero.range + 20 && d < minD) {
+                            if (d <= effMeleeRange + 20 && d < minD) {
                                 minD = d;
                                 target = enemy;
                             }
                         }
 
                         if (target) {
-                            hero.timer = 0;
                             target.hp -= actualHeroAtk;
                             target.y = Math.max(20, target.y - 12); // 击退效果
                             addFloatingText(target.x, target.y - 12, `🗡️ ${hero.name}斩 -${actualHeroAtk}!`, hero.color);
                             addParticles(target.x, target.y, hero.color, 10);
                             if (target.hp <= 0) {
                                 recordHeroKill(hero, target.x, target.y);
+                            }
+                        }
+                    } else if (hero.type === 'repair') {
+                        // 🛠️ 机关修补类英雄 (黄月英/鲁班/马钧)
+                        const lvlBonus = 1 + (hero.level - 1) * 0.25;
+                        const wallHeal = Math.round((hero.repairWallHp || 180) * lvlBonus);
+                        const defHeal = Math.round((hero.repairDefenseHp || 90) * lvlBonus);
+
+                        if (tdState.castle.hp < tdState.castle.maxHp) {
+                            tdState.castle.hp = Math.min(tdState.castle.maxHp, tdState.castle.hp + wallHeal);
+                        }
+
+                        // 维修箭塔与拒马
+                        const towers = [tdState.defenses.leftTower, tdState.defenses.centerTower, tdState.defenses.rightTower];
+                        for (let t of towers) {
+                            if (t.level > 0 && t.hp > 0 && t.hp < t.maxHp) {
+                                t.hp = Math.min(t.maxHp, t.hp + defHeal);
+                            }
+                        }
+                        if (tdState.defenses.chevalDeFrise && tdState.defenses.chevalDeFrise.hp > 0 && tdState.defenses.chevalDeFrise.hp < tdState.defenses.chevalDeFrise.maxHp) {
+                            tdState.defenses.chevalDeFrise.hp = Math.min(tdState.defenses.chevalDeFrise.maxHp, tdState.defenses.chevalDeFrise.hp + defHeal);
+                        }
+
+                        addFloatingText(hero.x, tdState.castle.y - 25, `🛠️ [${hero.name}]机巧修葺 +${wallHeal}HP!`, hero.color);
+                        addParticles(hero.x, tdState.castle.y - 15, hero.color, 15);
+
+                        // 机关飞轮对敌造成攻击
+                        if (tdState.enemies.length > 0) {
+                            const frontEnemy = tdState.enemies[0];
+                            frontEnemy.hp -= actualHeroAtk;
+                            addFloatingText(frontEnemy.x, frontEnemy.y - 10, `⚙️机关飞轮 -${actualHeroAtk}`, hero.color);
+                            if (frontEnemy.hp <= 0) recordHeroKill(hero, frontEnemy.x, frontEnemy.y);
+                        }
+                    } else if (hero.type === 'support') {
+                        // 👑 增益/减益类主将 (刘备, 曹操, 郭嘉, 司马懿, 贾诩)
+                        if (hero.buffType === 'allyBoost') {
+                            // 刘备：全军仁德光环回血 & 攻击激励
+                            for (let otherH of tdState.playerHeroes) {
+                                otherH.hp = Math.min(otherH.maxHp, otherH.hp + 35 * hero.level);
+                            }
+                            addFloatingText(hero.x, hero.y - 15, `👑 仁德治世：全军恢复与激昂!`, hero.color);
+                            addParticles(hero.x, hero.y - 10, hero.color, 12);
+                        } else if (hero.buffType === 'critSpeed') {
+                            // 曹操：短歌行战狂提升
+                            addFloatingText(hero.x, hero.y - 15, `🗡️ 魏武短歌：全军攻速暴涨!`, hero.color);
+                            addParticles(hero.x, hero.y - 10, hero.color, 14);
+                            if (tdState.enemies.length > 0) {
+                                const e = tdState.enemies[0];
+                                e.hp -= actualHeroAtk;
+                                addFloatingText(e.x, e.y - 10, `🗡️ 倚天剑气 -${actualHeroAtk}!`, hero.color);
+                                if (e.hp <= 0) recordHeroKill(hero, e.x, e.y);
+                            }
+                        } else if (hero.debuffType === 'weakenSlow') {
+                            // 郭嘉：十胜十败大范围敌军虚弱减速
+                            for (let enemy of tdState.enemies) {
+                                enemy.slowFactor = Math.min(enemy.slowFactor, 0.65);
+                                enemy.hp -= actualHeroAtk * 0.4;
+                            }
+                            addFloatingText(hero.x, hero.y - 15, `🔮 十胜十败：敌军全场虚弱减速!`, hero.color);
+                            addParticles(hero.x, hero.y - 10, hero.color, 15);
+                        } else if (hero.debuffType === 'vulnerability') {
+                            // 司马懿：鹰视狼顾天雷破甲
+                            for (let enemy of tdState.enemies.slice(0, 3)) {
+                                enemy.hp -= actualHeroAtk * 1.4;
+                                addFloatingText(enemy.x, enemy.y - 10, `🦅 冥域天雷 -${Math.round(actualHeroAtk * 1.4)}!`, hero.color);
+                                addParticles(enemy.x, enemy.y, hero.color, 8);
+                                if (enemy.hp <= 0) recordHeroKill(hero, enemy.x, enemy.y);
+                            }
+                        } else if (hero.debuffType === 'poisonBlast') {
+                            // 贾诩：算无遗策剧毒连环
+                            for (let enemy of tdState.enemies.slice(0, 4)) {
+                                enemy.hp -= actualHeroAtk;
+                                addFloatingText(enemy.x, enemy.y - 10, `🧪 剧毒腐蚀 -${actualHeroAtk}!`, hero.color);
+                                if (enemy.hp <= 0) recordHeroKill(hero, enemy.x, enemy.y);
                             }
                         }
                     }
@@ -2445,10 +3014,11 @@
                 if (t.level <= 0 || t.hp <= 0) continue;
                 t.timer += dt;
                 if (t.timer >= (t.rate * rateMult)) {
+                    const effTowerRange = getEffectiveTowerRange(t);
                     let target = null, minD = 9999;
                     for (let enemy of tdState.enemies) {
                         const dist = Math.hypot(enemy.x - t.x, enemy.y - t.y);
-                        if (dist <= t.range && dist < minD) {
+                        if (dist <= effTowerRange && dist < minD) {
                             minD = dist;
                             target = enemy;
                         }
@@ -2564,22 +3134,62 @@
                 }
             }
 
-            // 6. 床弩穿透重箭发射
+            // 6. 🎯 灭世穿透重弩 (支持多角度扇形贯穿、1~3根重箭、CD长、高速高伤)
             const ballista = tdState.defenses.ballista;
             if (ballista.level > 0 && tdState.enemies.length > 0) {
                 ballista.timer += dt;
-                if (ballista.timer >= ballista.rate) {
+                const effectiveRate = Math.max(3.0, (ballista.rate || 4.5) * rateMult);
+                if (ballista.timer >= effectiveRate) {
                     ballista.timer = 0;
-                    const ballistaX = tdState.castle.x + 80;
-                    tdState.projectiles.push({
-                        id: Math.random().toString(36).substr(2, 9),
-                        type: 'bolt',
-                        x: ballistaX,
-                        y: tdState.castle.y - 15,
-                        vy: -280,
-                        atk: Math.round(ballista.atk * trapBonus)
-                    });
-                    addParticles(ballistaX, tdState.castle.y - 15, "#cbd5e1", 8);
+                    const ballistaX = tdState.castle.x + tdState.castle.width * 0.30;
+                    const ballistaY = tdState.castle.y - 10;
+
+                    // 优先挑选高威胁目标 (Boss、武将、高血量或前锋单位)
+                    let primeTarget = null, maxThreat = -1;
+                    for (let enemy of tdState.enemies) {
+                        let threat = (enemy.hp || 100) + (enemy.isBoss ? 5000 : 0) + (enemy.auraColor ? 2000 : 0);
+                        if (threat > maxThreat) {
+                            maxThreat = threat;
+                            primeTarget = enemy;
+                        }
+                    }
+
+                    if (!primeTarget) primeTarget = tdState.enemies[0];
+
+                    // 计算瞄准角 (不局限于垂直射击，依据敌军方位瞄准)
+                    const dx = primeTarget.x - ballistaX;
+                    const dy = Math.min(-40, primeTarget.y - ballistaY);
+                    const baseAngle = Math.atan2(dy, dx);
+
+                    // 箭矢数量：Lv 1为1支，Lv 2为2支，Lv 3+升级为3根扇形重箭
+                    const arrowCount = ballista.level >= 3 ? 3 : (ballista.level >= 2 ? 2 : 1);
+                    const boltSpeed = 520; // 极快初速
+                    const baseAtk = Math.round((ballista.atk || 550) * trapBonus);
+
+                    let angles = [];
+                    if (arrowCount === 1) {
+                        angles = [baseAngle];
+                    } else if (arrowCount === 2) {
+                        angles = [baseAngle - 0.12, baseAngle + 0.12];
+                    } else {
+                        angles = [baseAngle, baseAngle - 0.18, baseAngle + 0.18];
+                    }
+
+                    for (let angle of angles) {
+                        tdState.projectiles.push({
+                            id: Math.random().toString(36).substr(2, 9),
+                            type: 'bolt',
+                            x: ballistaX,
+                            y: ballistaY,
+                            vx: Math.cos(angle) * boltSpeed,
+                            vy: Math.sin(angle) * boltSpeed,
+                            atk: baseAtk,
+                            hitIds: new Set()
+                        });
+                    }
+
+                    addFloatingText(ballistaX, ballistaY - 18, `🎯 重弩穿透齐射 (${arrowCount}矢)!`, "#38bdf8");
+                    addParticles(ballistaX, ballistaY, "#38bdf8", 12);
                 }
             }
 
@@ -2657,12 +3267,7 @@
                                 }
                             }
                         } else {
-                            tdState.castle.hp -= realDmg;
-                            addFloatingText(p.targetX, p.targetY - 10, `-${realDmg}`, "#f43f5e");
-                            if (tdState.castle.hp <= 0) {
-                                tdState.castle.hp = 0;
-                                tdState.winner = 'defeat';
-                            }
+                            applyCastleDamage(realDmg, p.targetX, p.targetY - 10);
                         }
                         tdState.projectiles.splice(pIdx, 1);
                     } else {
@@ -2743,12 +3348,7 @@
                                 }
                             }
                         } else {
-                            tdState.castle.hp -= p.atk;
-                            addFloatingText(p.targetX, p.targetY - 10, `-${p.atk}`, "#f43f5e");
-                            if (tdState.castle.hp <= 0) {
-                                tdState.castle.hp = 0;
-                                tdState.winner = 'defeat';
-                            }
+                            applyCastleDamage(p.atk, p.targetX, p.targetY - 10);
                         }
                         tdState.projectiles.splice(pIdx, 1);
                     }
@@ -2788,19 +3388,24 @@
                     }
                 }
                 else if (p.type === 'bolt') {
-                    p.y += p.vy * dt;
+                    p.x += (p.vx || 0) * dt;
+                    p.y += (p.vy || -520) * dt;
+
                     for (let enemy of tdState.enemies) {
-                        if (Math.abs(enemy.x - p.x) < 18 && Math.abs(enemy.y - p.y) < 12) {
+                        const dist = Math.hypot(enemy.x - p.x, enemy.y - p.y);
+                        if (dist < (enemy.radius || 12) + 14) {
                             if (!p.hitIds) p.hitIds = new Set();
                             if (!p.hitIds.has(enemy.id)) {
                                 p.hitIds.add(enemy.id);
-                                enemy.hp -= p.atk;
-                                addFloatingText(enemy.x, enemy.y - 10, `⚡穿透 -${p.atk}!`, "#38bdf8");
-                                addParticles(enemy.x, enemy.y, "#38bdf8", 5);
+                                const realDmg = Math.round(p.atk * (enemy.armor || 1.0));
+                                enemy.hp -= realDmg;
+                                enemy.y = Math.max(15, enemy.y - 10); // 重箭穿透击退
+                                addFloatingText(enemy.x, enemy.y - 10, `⚡贯穿 -${realDmg}!`, "#38bdf8");
+                                addParticles(enemy.x, enemy.y, "#38bdf8", 7);
                             }
                         }
                     }
-                    if (p.y < 0) {
+                    if (p.y < -30 || p.x < -30 || p.x > canvas.width + 30 || p.y > canvas.height + 30) {
                         tdState.projectiles.splice(pIdx, 1);
                     }
                 }
@@ -3168,6 +3773,26 @@
                 ctx.fillRect(x, castle.y - 8, battlementWidth, 10);
             }
 
+            // 🛡️ 机关金刚护盾 / 紧急防御力场流光特效
+            const gearShieldDef = tdState.defenses.gearShield;
+            const hasGearShield = gearShieldDef && gearShieldDef.level > 0 && gearShieldDef.currentShield > 0;
+            const hasEmergencyShield = tdState.castleShieldTimer && tdState.castleShieldTimer > 0;
+
+            if (hasGearShield || hasEmergencyShield) {
+                const shieldPulse = Math.sin(performance.now() * 0.005) * 0.15 + 0.35;
+                ctx.fillStyle = hasEmergencyShield ? `rgba(234, 179, 8, ${shieldPulse + 0.15})` : `rgba(56, 189, 248, ${shieldPulse})`;
+                ctx.fillRect(castle.x - 4, castle.y - 12, castle.width + 8, castle.height + 16);
+                ctx.strokeStyle = hasEmergencyShield ? '#fde047' : '#38bdf8';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(castle.x - 4, castle.y - 12, castle.width + 8, castle.height + 16);
+
+                ctx.fillStyle = hasEmergencyShield ? '#fde047' : '#38bdf8';
+                ctx.font = 'bold 9px sans-serif';
+                ctx.textAlign = 'center';
+                const shieldText = hasEmergencyShield ? `⚡ 紧急加固护盾 (${Math.ceil(tdState.castleShieldTimer)}s)` : `🛡️ 金刚护盾 (${Math.round(gearShieldDef.currentShield)}/${gearShieldDef.maxShield})`;
+                ctx.fillText(shieldText, castle.x + castle.width / 2, castle.y - 16);
+            }
+
             // 6. 绘制防御塔 (左、中、右 分散布局) 带有血条
             const towers = [tdState.defenses.leftTower, tdState.defenses.centerTower, tdState.defenses.rightTower];
             for (let t of towers) {
@@ -3376,14 +4001,38 @@
                         ctx.stroke();
                     }
                 } else if (p.type === 'bolt') {
-                    // 斜向连发床弩枪绘制
-                    ctx.strokeStyle = '#38bdf8';
-                    ctx.lineWidth = 3;
-                    const angle = Math.atan2(p.vy || -350, p.vx || 0);
+                    // 床弩重型穿透箭绘制 (粗重穿透长矛箭矢，破甲箭头)
+                    const angle = Math.atan2(p.vy || -520, p.vx || 0);
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(angle);
+
+                    // 箭身破空流光
+                    ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
+                    ctx.lineWidth = 5.5;
                     ctx.beginPath();
-                    ctx.moveTo(p.x, p.y);
-                    ctx.lineTo(p.x - Math.cos(angle) * 16, p.y - Math.sin(angle) * 16);
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(-22, 0);
                     ctx.stroke();
+
+                    // 箭身钢芯
+                    ctx.strokeStyle = '#e0f2fe';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(2, 0);
+                    ctx.lineTo(-18, 0);
+                    ctx.stroke();
+
+                    // 锋利箭头
+                    ctx.fillStyle = '#38bdf8';
+                    ctx.beginPath();
+                    ctx.moveTo(5, 0);
+                    ctx.lineTo(-2, -3);
+                    ctx.lineTo(-2, 3);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    ctx.restore();
                 }
             }
 
@@ -3406,16 +4055,21 @@
             }
             ctx.globalAlpha = 1.0;
 
-            // 13. 绘制飘字
+            // 13. 绘制飘字 (黑色描边 + 鲜明文字，保证任意背景清晰可辨)
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
             for (let ft of tdState.floatingTexts) {
-                ctx.fillStyle = ft.color;
                 ctx.globalAlpha = Math.max(0, ft.life);
                 ctx.font = 'bold 11px sans-serif';
+                ctx.strokeStyle = 'rgba(0, 0, 0, 0.85)';
+                ctx.lineWidth = 2.5;
+                ctx.strokeText(ft.text, ft.x, ft.y);
+                ctx.fillStyle = ft.color;
                 ctx.fillText(ft.text, ft.x, ft.y);
             }
             ctx.globalAlpha = 1.0;
 
-            // 14. 暂停状态横幅 (手动暂停或弹窗暂停)
+            // 14. 阶段与暂停状态横幅
             if (tdState.isManualPaused && !tdState.winner) {
                 ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
                 ctx.fillRect(10, 8, w - 20, 26);
@@ -3440,6 +4094,19 @@
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillText('⏸️ 升级/招募中 — 战场已暂停', w / 2, 20);
+            } else if (tdState.phase === 'study' && !tdState.winner) {
+                const remain = Math.max(0, Math.ceil(tdState.phaseTimer));
+                ctx.fillStyle = 'rgba(12, 74, 110, 0.75)';
+                ctx.fillRect(10, 8, w - 20, 24);
+                ctx.strokeStyle = '#38bdf8';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(10, 8, w - 20, 24);
+
+                ctx.fillStyle = '#38bdf8';
+                ctx.font = 'bold 11px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(`📖 背诵时间 (${remain}s) — 专心复习单词积累升级点，20s后全军开战！`, w / 2, 20);
             }
 
             // 15. 沦陷横幅
